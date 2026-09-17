@@ -30,10 +30,11 @@ Validation: production build and 33 tests pass. Desktop/mobile checks found no h
 - Public app URL: https://graceful-spoonbill-850.convex.site (hosted development deployment).
 - Public repository: https://github.com/himanshu748/opportunity-scout-convex
 - Demo video: [78-second narrated walkthrough](https://drive.google.com/file/d/1Qx-wNIrZ9GYO3j78sQm42wcHX6a-z9Qp/view) with Deepgram Aura 2 narration, captions, current discovery and cash views, and a fresh briefing generated through Convex AI Gateway. Edited from real browser captures and exported at 1080p/60fps. Google Drive link viewing is enabled.
-- Social post: not yet published.
+- Social videos: [X](https://x.com/jhahimanshu653/status/2100529730101612800) and [LinkedIn](https://www.linkedin.com/feed/update/urn:li:ugcPost:7506295370432352256/). Both include the native 78-second demo, captions, paragraph breaks, sponsor tags, and an explanation of Mastra's role.
 - Real email reply round trip: still requires verification.
 - Convex account: Starter and AI Gateway enabled on September 17. The team monthly disable threshold is $5; earlier usage remains billed against the team's limits.
-- Astra/Product Hunt: selected Scout and prepared the [launch package](launch/product-hunt.md). Submission and scheduling are not yet confirmed.
+- Astra/Product Hunt: [launch](https://www.producthunt.com/products/opportunity-scout?launch=opportunity-scout) successfully scheduled for September 18, 2026 at 12:01 AM Pacific (12:31 PM IST), with the GPT-6 Astra challenge selected. See the [launch package](launch/product-hunt.md).
+- All Gas submission: VibeApps returned a server error on two completed submission attempts. No All Gas submission receipt exists yet.
 
 Official requirements: https://www.convex.dev/hackathons/all-gas
 
@@ -71,4 +72,8 @@ September 17, launch update: Activated Convex AI Gateway for the shared Mastra/O
 
 The one authorized launch email arrived in the recipient's Gmail inbox from the existing RentPilot inbox. This verifies outbound delivery, not a recipient reply round trip or a personalized weekly digest. Added a fixed launch-test idempotency key so checking the same run does not send duplicates.
 
-Replaced the Drive video in place with a 78.43-second narrated, captioned edit showing the current gateway briefing, community source submission, cash evidence, saves, and preferences. Verified the local media streams and full decode; the upload returned the same Drive ID with the new 7,447,994-byte file. Prepared Product Hunt copy and actual-product gallery images for the September 18 Build with Astra challenge. Local build metadata confirms 41 recorded Scout turns used GPT-6 Astra; the deployed recommendation model remains GPT-4.1 mini. No Product Hunt submission receipt exists yet.
+Replaced the Drive video in place with a 78.43-second narrated, captioned edit showing the current gateway briefing, community source submission, cash evidence, saves, and preferences. Verified the local media streams and full decode; the upload returned the same Drive ID with the new 7,447,994-byte file. Prepared Product Hunt copy and actual-product gallery images for the September 18 Build with Astra challenge. Local build metadata confirms 41 recorded Scout turns used GPT-6 Astra; the deployed recommendation model remains GPT-4.1 mini.
+
+September 17, launch scheduling: Product Hunt displayed “Successfully Scheduled!” and its prelaunch dashboard reports Scheduled for the September 18 launch. The challenge response describes Astra's build contribution and explicitly identifies GPT-4.1 mini as the runtime model. Native video posts were published on X and LinkedIn with all five company tags, including Mastra. X playback completed; LinkedIn playback and captions were verified. The first X receipt did not persist and is not used as evidence. The final X revision uses the current @mastra handle.
+
+The All Gas form returned `[CONVEX M(stories:submit)] Server Error` on two attempts (request IDs `bc15d25162069ac9` and `d41f74a29e633bd2`). This remains an incomplete submission, despite the app, public repository, demo, and social posts being available.

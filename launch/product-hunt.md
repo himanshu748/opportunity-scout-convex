@@ -1,6 +1,17 @@
 # Opportunity Scout: Build with Astra entry
 
-Status: prepared locally. Not submitted or scheduled on Product Hunt.
+Status: successfully scheduled on Product Hunt for September 18, 2026 at 12:01 AM Pacific (12:31 PM IST), with the GPT-6 Astra challenge selected. Product Hunt displayed “Successfully Scheduled!” and the prelaunch dashboard reports Scheduled. This is a scheduled launch, not a claim that the product is already on the daily leaderboard.
+
+Launch: https://www.producthunt.com/products/opportunity-scout?launch=opportunity-scout
+
+Prelaunch dashboard: https://www.producthunt.com/products/opportunity-scout/opportunity-scout/prelaunch
+
+Native video announcements:
+
+- X: https://x.com/jhahimanshu653/status/2100529730101612800
+- LinkedIn: https://www.linkedin.com/feed/update/urn:li:ugcPost:7506295370432352256/
+
+Both posts explain Convex, OpenAI, Mastra, Firecrawl, and AgentMail with clickable company tags and blank paragraph breaks. Native video playback was verified on both platforms; the SRT captions were uploaded too. Mastra's current X handle is `@mastra`.
 
 Challenge: https://www.producthunt.com/contests/gpt-6-astra-challenge
 
