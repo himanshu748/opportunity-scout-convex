@@ -40,3 +40,16 @@ it("rejects the observed cross-event recommendation and wrong identities", () =>
     ),
   ).toBe(false);
 });
+
+import { nonFinancialAdvice } from "./advisorGrounding";
+it("keeps model-invented financial claims out of recommendation prose", () => {
+  expect(
+    nonFinancialAdvice(
+      "A $740,000 pool with $100,000 confirmed cash.",
+      "Read the verified reward facts.",
+    ),
+  ).toBe("Read the verified reward facts.");
+  expect(
+    nonFinancialAdvice("Build a React Native prototype.", "fallback"),
+  ).toBe("Build a React Native prototype.");
+});

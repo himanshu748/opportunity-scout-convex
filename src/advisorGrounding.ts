@@ -47,3 +47,12 @@ export function isGroundedPick(pick: GroundedPick, sources: GroundingSource[]) {
     );
   });
 }
+
+/** Monetary claims are rendered from verified records, never model prose. */
+export function nonFinancialAdvice(text: string, fallback: string) {
+  return /[$€£₹]|\b(cash|prizes?|rewards?|credits?|usd|usdt|dollars?|euros?|rupees?)\b/i.test(
+    text,
+  )
+    ? fallback
+    : text;
+}

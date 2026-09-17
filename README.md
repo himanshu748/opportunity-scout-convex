@@ -31,7 +31,7 @@ All Gas and the R Consortium grant have source-specific parsers tied to their ve
 
 ## Accounts and recommendations
 
-Convex Auth protects profiles, saved opportunities, and shortlist history. Mastra memory uses Convex storage through internal-only handlers. The advisor filters recorded opportunities against known constraints, then explains fit, tradeoffs, and next steps. Missing eligibility requirements remain unknown. The current AI Gateway free tier can rate-limit requests; the UI reports this and asks the user to retry. Recommendations do not establish eligibility or guarantee success.
+Convex Auth protects profiles, saved opportunities, and shortlist history. Mastra memory uses Convex storage through internal-only handlers. The advisor filters recorded opportunities against known constraints, then explains fit, tradeoffs, and next steps. Missing eligibility requirements remain unknown. The hosted advisor uses OpenAI GPT-4.1 mini through Vercel AI Gateway. Its free tier can rate-limit requests; the UI reports this and asks the user to retry. Recommendations do not establish eligibility or guarantee success.
 
 ## Email setup
 
@@ -39,7 +39,7 @@ Scout uses an explicitly authorized shared AgentMail inbox, configured with `AGE
 
 ## Verification
 
-Production build and 46 unit tests pass. Live checks exercised Convex sign-in, profile isolation, private storage, saving an opportunity, source discovery, and the advisor. Desktop/mobile checks confirm buttons use 4 px vertical/8 px horizontal padding and workspace icons are 16 px. An isolated synthetic deadline test verified automatic removal without writing a test opportunity to the real catalog.
+Production build and 47 unit tests pass. Live checks exercised Convex sign-in, profile isolation, private storage, saving an opportunity, source discovery, and the advisor. Desktop/mobile checks confirm buttons use 4 px vertical/8 px horizontal padding and workspace icons are 16 px. An isolated synthetic deadline test verified automatic removal without writing a test opportunity to the real catalog.
 
 Discovery counts are refreshed hourly instead of scanning the source queue every five minutes. The daily job runs on Convex even when the browser is closed. Deadline expiry remains independently scheduled.
 
