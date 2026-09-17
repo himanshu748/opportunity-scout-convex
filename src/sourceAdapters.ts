@@ -35,3 +35,43 @@ export function allGasSource(url: string, markdown: string, now: number) {
     deadlineConfirmed: true,
   };
 }
+
+/** Fixed, independently checked 2026 grant window; never infer a later cycle. */
+export function rConsortiumSource(url: string, markdown: string, now: number) {
+  const deadline = Date.parse("2026-10-01T23:59:00-04:00");
+  const evidence = "closes October 1, 2026, at 11:59 p.m. US Eastern Time";
+  if (
+    url !==
+      "https://r-consortium.org/posts/r-consortium-now-accepting-submissions-for-technical-grants/index.html" ||
+    now >= deadline ||
+    !markdown.includes(evidence) ||
+    !markdown.includes("now accepting proposals") ||
+    !markdown.includes("R Consortium")
+  )
+    return null;
+  return {
+    title: "R Consortium Technical Grants Cycle 2026",
+    organization: "R Consortium",
+    kind: "grant" as const,
+    description:
+      "Funding for open-source R software, developer tools, and community programs. Submit a focused 2–5 page proposal with deliverables using the ISC template.",
+    url,
+    skills: ["R", "Open source", "Developer tools"],
+    location: "Worldwide",
+    remote: true,
+    reward: "Grant amount not specified; funding paid in two milestones",
+    deadline,
+    deadlineEvidence: evidence,
+    hours: null,
+    solo: null,
+    eligibility:
+      "Projects must benefit the wider R ecosystem. Use the official ISC proposal template and review the funding criteria.",
+    evidence,
+    organizerEvidence: "R Consortium",
+    checkedAt: now,
+    status: "open" as const,
+    origin: "source" as const,
+    acceptingSubmissions: true,
+    deadlineConfirmed: true,
+  };
+}

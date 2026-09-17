@@ -130,11 +130,14 @@ async function build(
       .max(3),
     note: z.string(),
   });
-  const response = await agent.generate(prompt, {
-    memory: { thread: threadId, resource: userId },
-    maxSteps: 5,
-    structuredOutput: { schema: shortlistSchema },
-  });
+  const response = await agent.generate(
+    `${prompt}\n\nCurrent authoritative candidates (use these exact IDs, titles and descriptions; all prior results may be stale):\n${JSON.stringify(candidates.map((o) => ({ id: o._id, title: o.title, description: o.description })))}`,
+    {
+      memory: { thread: threadId, resource: userId },
+      maxSteps: 5,
+      structuredOutput: { schema: shortlistSchema },
+    },
+  );
   const output = shortlistSchema.parse(response.object);
   const seen = new Set<string>();
   const picks = output.picks.flatMap((p) => {

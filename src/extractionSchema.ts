@@ -5,6 +5,7 @@ export const record = z.object({
   closureEvidence: z.string(),
   acceptingSubmissions: z.boolean(),
   deadlineConfirmed: z.boolean(),
+  deadlineEvidence: z.string().default(""),
   title: z.string(),
   organization: z.string(),
   kind: z.enum(["hackathon", "gig", "grant"]),

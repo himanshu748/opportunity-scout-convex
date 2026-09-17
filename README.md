@@ -27,7 +27,7 @@ Discovery rotates through 28 query themes over four days: sponsor sites, communi
 
 The catalog hides closed, expired, unconfirmed, and stale hackathons. Source checks must be no older than 48 hours. Deadline expiration is scheduled in Convex and enforced in the client. A 650 ms inert exit animation removes expired rows; reduced-motion users get immediate removal. Saved records are preserved but expired opportunities leave the active dashboard.
 
-All Gas has a source-specific parser tied to its verified 2026 submission window. It checks the source wording before refreshing the listing and never rolls the deadline into another year. Other pages use Firecrawl structured extraction, separate from the advisor model quota; users should still inspect original rules.
+All Gas and the R Consortium grant have source-specific parsers tied to their verified 2026 submission windows. It checks the source wording before refreshing the listing and never rolls the deadline into another year. Other pages use Firecrawl structured extraction with a source-quoted submission deadline, date, time and a supported timezone. Announcement dates and unsupported date formats remain unconfirmed. Users should still inspect original rules.
 
 ## Accounts and recommendations
 
@@ -39,7 +39,7 @@ Scout uses an explicitly authorized shared AgentMail inbox, configured with `AGE
 
 ## Verification
 
-Production build and 44 unit tests pass. Live checks exercised Convex sign-in, profile isolation, private storage, saving an opportunity, source discovery, and the advisor. Desktop/mobile checks confirm buttons use 4 px vertical/8 px horizontal padding and workspace icons are 16 px. An isolated synthetic deadline test verified automatic removal without writing a test opportunity to the real catalog.
+Production build and 46 unit tests pass. Live checks exercised Convex sign-in, profile isolation, private storage, saving an opportunity, source discovery, and the advisor. Desktop/mobile checks confirm buttons use 4 px vertical/8 px horizontal padding and workspace icons are 16 px. An isolated synthetic deadline test verified automatic removal without writing a test opportunity to the real catalog.
 
 Discovery counts are refreshed hourly instead of scanning the source queue every five minutes. The daily job runs on Convex even when the browser is closed. Deadline expiry remains independently scheduled.
 

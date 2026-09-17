@@ -53,3 +53,5 @@ September 17, release preparation: Fixed a Firecrawl integration error caused by
 Hosted account checks passed: sign-up, save, unsave, and profile editing. GitHub Actions passed the clean install, 43 tests, and build on the published repository.
 
 Hosted AI testing found a cross-event description mismatch. Added exact title and source-quote validation, rejection of obvious references to other candidate names, current-time context, and a deadline recheck before persistence. The regression test reproduces the mismatch. The hosted retry returned two accepted recommendations. These checks reduce obvious grounding errors; they do not prove all generated advice correct. 44 tests now pass.
+
+Final source review found an extracted winner-announcement date incorrectly used as a submission deadline. Unconfirmed that listing, required source-backed deadline evidence with deterministic date/time/timezone checks, and added a daylight-saving regression test. The R Consortium grant uses its independently checked October 1 Eastern-time window. Old shortlists containing invalidated sources are hidden. 46 tests and the build pass.

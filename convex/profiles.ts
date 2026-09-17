@@ -1,3 +1,4 @@
+import { isActiveOpportunity } from "../src/availability";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import {
@@ -114,6 +115,12 @@ export const latest = query({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .order("desc")
       .first();
+    if (row) {
+      for (const id of row.opportunityIds.slice(0, 3)) {
+        const opportunity = await ctx.db.get(id);
+        if (!opportunity || !isActiveOpportunity(opportunity)) return null;
+      }
+    }
     return row
       ? { body: row.body, createdAt: row.createdAt, request: row.request }
       : null;

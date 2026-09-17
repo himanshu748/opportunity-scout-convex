@@ -40,6 +40,7 @@ export const opportunityFields = {
   checkedAt: v.number(),
   acceptingSubmissions: v.optional(v.boolean()),
   deadlineConfirmed: v.optional(v.boolean()),
+  deadlineEvidence: v.optional(v.string()),
   status: v.union(v.literal("open"), v.literal("closed")),
   origin: v.union(v.literal("source"), v.literal("example")),
 };
