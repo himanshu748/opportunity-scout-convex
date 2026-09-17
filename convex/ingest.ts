@@ -85,8 +85,9 @@ export const checkNext = internalAction({
     }
     try {
       if (
+        source.url === "https://www.convex.dev/hackathons/all-gas" ||
         source.url ===
-        "https://r-consortium.org/posts/r-consortium-now-accepting-submissions-for-technical-grants/index.html"
+          "https://r-consortium.org/posts/r-consortium-now-accepting-submissions-for-technical-grants/index.html"
       ) {
         const response = await fetch(source.url, {
           signal: AbortSignal.timeout(15000),
@@ -96,7 +97,9 @@ export const checkNext = internalAction({
             .replace(/<[^>]*>/g, " ")
             .replace(/&nbsp;/g, " ")
             .replace(/\s+/g, " ");
-          const known = rConsortiumSource(source.url, text, Date.now());
+          const known =
+            allGasSource(source.url, text, Date.now()) ??
+            rConsortiumSource(source.url, text, Date.now());
           if (known) {
             await ctx.runMutation(internal.board.upsert, known);
             await ctx.runMutation(internal.discovery.complete, {

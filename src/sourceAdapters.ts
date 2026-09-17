@@ -1,3 +1,35 @@
+/** Parse the known organizer's three award tiers, reconciling cash and credits
+ * against its headline. Dollar amounts on this US organizer page are USD. */
+export function allGasPrizes(source: string, now: number) {
+  const text = source.replace(/[*#_]/g, "").replace(/\s+/g, " ");
+  if (/(?:\b(?:CAD|AUD|SGD|NZD|HKD)\b|CA\$|AU\$)/i.test(text)) return null;
+  const headline = text.match(/\$([\d,]+) Cash \+ Codex credits/i);
+  const section = text.match(
+    /Overall winner (.*?)Qualification and judging criteria/i,
+  )?.[1];
+  if (!headline || !section) return null;
+  const tiers = `Overall winner ${section}`.matchAll(
+    /(Overall winner|Second place|Third place) \$([\d,]+) cash (?:[-•] )?\$([\d,]+) in Codex credits/gi,
+  );
+  const awards = [...tiers];
+  if (
+    awards.length !== 3 ||
+    new Set(awards.map((a) => a[1].toLowerCase())).size !== 3
+  )
+    return null;
+  const amount = (s: string) => Number(s.replace(/,/g, ""));
+  const cash = awards.reduce((sum, a) => sum + amount(a[2]), 0);
+  const credits = awards.reduce((sum, a) => sum + amount(a[3]), 0);
+  if (cash <= 0 || cash + credits !== amount(headline[1])) return null;
+  const format = (n: number) => n.toLocaleString("en-US");
+  return {
+    reward: `$${format(cash)} cash pool + $${format(credits)} Codex credits`,
+    cashAmountUSD: cash,
+    cashEvidence: `$${format(cash)} cash pool calculated from organizer tiers: ${awards.map((a) => `${a[1]} $${a[2]} cash`).join("; ")}. Codex credits excluded.`,
+    cashVerifiedAt: now,
+  };
+}
+
 /** Source-specific parser for the official event the builder is participating in.
  * The fixed date is evidence-backed, not rolled forward to the next year. */
 export function allGasSource(url: string, markdown: string, now: number) {
@@ -22,6 +54,7 @@ export function allGasSource(url: string, markdown: string, now: number) {
     location: "Worldwide, with eligibility exclusions",
     remote: true,
     reward: "Cash prizes and Codex credits; see prize breakdown",
+    ...allGasPrizes(markdown, now),
     deadline: 1790103600000,
     hours: null,
     solo: null,
