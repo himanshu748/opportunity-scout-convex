@@ -46,6 +46,25 @@ export function discoveryQueries(now: number, topic = "") {
       : []),
     ...themes.slice(offset, offset + 6),
     ...daily,
+    ...[
+      "site:devfolio.co hackathon applications open",
+      "site:dorahacks.io/hackathon submission deadline",
+      "site:unstop.com/hackathons registration deadline",
+      "site:hackerearth.com/challenges/hackathon registration",
+      "site:taikai.network hackathon challenge open",
+      "site:lablab.ai/ai-hackathons submissions",
+      "site:mlh.com university hackathon registration",
+      "site:ethglobal.com/events applications open",
+      "site:encode.club hackathon applications",
+      "site:hackquest.io hackathon deadline",
+      "site:dev.to/challenges submissions",
+      "site:hackathons.hackclub.com student hackathon",
+    ]
+      .slice(
+        (Math.floor(now / 86400000) % 2) * 6,
+        (Math.floor(now / 86400000) % 2) * 6 + 6,
+      )
+      .map((q) => `${q} ${month} -site:x.com -site:twitter.com`),
   ];
 }
 export function normalizeSourceUrl(value: string) {
@@ -57,7 +76,9 @@ export function normalizeSourceUrl(value: string) {
       url.username ||
       url.password ||
       url.port ||
-      /^(localhost|127\.|10\.|192\.168\.|169\.254\.|\[)/i.test(url.hostname) ||
+      /^(localhost|127\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.|\[)/i.test(
+        url.hostname,
+      ) ||
       !url.hostname.includes(".")
     )
       return null;
@@ -79,6 +100,10 @@ export function normalizeSourceUrl(value: string) {
       )
     )
       return null;
+    if (/^[-a-z\d]+\.devpost\.com$/i.test(url.hostname)) {
+      url.pathname = "/";
+      url.search = "";
+    }
     url.pathname = url.pathname.replace(/\/+$/, "") || "/";
     url.hash = "";
     for (const key of [...url.searchParams.keys()])
@@ -117,6 +142,12 @@ export const directorySources = [
   "https://ethglobal.com/events",
   "https://dev.to/challenges",
   "https://hackathons.hackclub.com/",
+  "https://www.mlh.com/events",
+  "https://www.hackerearth.com/challenges/hackathon/",
+  "https://taikai.network/hackathons",
+  "https://www.encode.club/hackathons",
+  "https://www.hackquest.io/hackathons",
+  "https://itch.io/jams",
 ];
 /** Prefer actual event pages over more community calendars and roundup articles. */
 export function sourcePriority(url: string, result?: string) {

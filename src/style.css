@@ -1726,3 +1726,39 @@ button svg {
   font-size: 12px;
   line-height: 1.5;
 }
+
+.suggest-source {
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+}
+.suggest-source summary {
+  cursor: pointer;
+  color: var(--muted);
+  width: fit-content;
+  padding: 4px 8px;
+}
+.suggest-source form {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+  max-width: 640px;
+}
+.suggest-source-row {
+  display: flex;
+  gap: 8px;
+}
+.suggest-source-row input {
+  min-width: 0;
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper, #fff);
+  color: inherit;
+}
+.suggest-source-row button {
+  padding: 4px 8px;
+}
+.suggest-source small {
+  color: var(--muted);
+}

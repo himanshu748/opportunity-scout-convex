@@ -319,3 +319,49 @@ export const releaseWorker = internalMutation({
     return null;
   },
 });
+
+/** Community links enter the same verification queue, never the public catalog directly. */
+export const submitSource = mutation({
+  args: { url: v.string() },
+  returns: v.string(),
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new ConvexError("Sign in to submit an opportunity.");
+    const url =
+      args.url.length <= 2000 ? normalizeSourceUrl(args.url.trim()) : null;
+    if (!url)
+      throw new ConvexError(
+        "Use a public HTTPS organizer or event link. X links are not supported.",
+      );
+    const recent = await ctx.db
+      .query("sourceSubmissions")
+      .withIndex("by_user_time", (q) =>
+        q.eq("userId", userId).gt("submittedAt", Date.now() - 86400000),
+      )
+      .take(5);
+    if (recent.length >= 5)
+      throw new ConvexError(
+        "You can suggest five opportunities per day. Try again tomorrow.",
+      );
+    const existing = await ctx.db
+      .query("sourceQueue")
+      .withIndex("by_url", (q) => q.eq("url", url))
+      .unique();
+    if (existing)
+      return "Scout already knows this link. It will appear only after its open application window is verified.";
+    await ctx.db.insert("sourceSubmissions", {
+      userId,
+      url,
+      submittedAt: Date.now(),
+    });
+    await ctx.db.insert("sourceQueue", {
+      url,
+      channel: "Community suggestion",
+      depth: 0,
+      nextCheckAt: Date.now(),
+      attempts: 0,
+    });
+    await ctx.scheduler.runAfter(0, internal.ingest.drain, {});
+    return "Link submitted for verification. We’ll check the organizer and deadline before listing it.";
+  },
+});

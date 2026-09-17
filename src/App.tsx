@@ -3,6 +3,7 @@ import {
   confirmedCashUSD,
   type OpportunitySort,
 } from "./opportunitySort";
+import { ConvexError } from "convex/values";
 import { profileInput } from "./profileInput";
 import Markdown from "react-markdown";
 import { useState, useEffect, useRef, type FormEvent } from "react";
@@ -66,6 +67,7 @@ type Model = {
   latest: { body: string; createdAt: number; request: string } | null;
   authenticated: boolean;
   status: { ai: boolean; firecrawl: boolean; email: boolean } | undefined;
+  submitSource?: (url: string) => Promise<string>;
   toggle: (id: string) => Promise<unknown>;
   save: (p: Profile, enabled: boolean) => Promise<unknown>;
   ask: (s: string) => Promise<unknown>;
@@ -95,6 +97,7 @@ function Connected() {
     profile = useQuery(api.profiles.mine, {}),
     latest = useQuery(api.profiles.latest, {}),
     status = useQuery(api.system.status, {});
+  const submitSource = useMutation(api.discovery.submitSource);
   const toggle = useMutation(api.board.toggleSave),
     save = useMutation(api.profiles.save),
     ask = useAction(api.advisor.ask);
@@ -128,6 +131,7 @@ function Connected() {
         latest: latest ?? null,
         authenticated: isAuthenticated,
         status,
+        submitSource: (url) => submitSource({ url }),
         toggle: (id) => toggle({ opportunityId: id as Id<"opportunities"> }),
         save: (p, enabled) => save(profileInput(p, enabled)),
         ask: (s) => ask({ prompt: s }),
@@ -186,6 +190,8 @@ export function Shell({
         : "board";
     }),
     [kind, setKind] = useState<"all" | "hackathon" | "gig" | "grant">("all"),
+    [sourceUrl, setSourceUrl] = useState(""),
+    [submittingSource, setSubmittingSource] = useState(false),
     [search, setSearch] = useState(""),
     [sort, setSort] = useState<OpportunitySort>("endingSoon"),
     [selected, setSelected] = useState<string | null>(() =>
@@ -483,6 +489,62 @@ export function Shell({
                         ),
                       )}
                     </div>
+                    <details className="suggest-source">
+                      <summary>Missing an opportunity?</summary>
+                      <form
+                        onSubmit={async (event) => {
+                          event.preventDefault();
+                          if (!model.authenticated) {
+                            openLogin();
+                            return;
+                          }
+                          if (!model.submitSource) return;
+                          setError("");
+                          setNotice("");
+                          setSubmittingSource(true);
+                          try {
+                            setNotice(await model.submitSource(sourceUrl));
+                            setSourceUrl("");
+                          } catch (error) {
+                            setError(
+                              error instanceof ConvexError
+                                ? String(error.data)
+                                : "Could not submit this link. Please try again.",
+                            );
+                          } finally {
+                            setSubmittingSource(false);
+                          }
+                        }}
+                      >
+                        <label htmlFor="source-url">
+                          Official event or organizer URL
+                        </label>
+                        <div className="suggest-source-row">
+                          <input
+                            id="source-url"
+                            type="url"
+                            required
+                            maxLength={2000}
+                            placeholder="https://…"
+                            value={sourceUrl}
+                            onChange={(event) =>
+                              setSourceUrl(event.target.value)
+                            }
+                          />
+                          <button
+                            className="btn"
+                            type="submit"
+                            disabled={submittingSource}
+                          >
+                            {submittingSource ? "Submitting…" : "Submit link"}
+                          </button>
+                        </div>
+                        <small>
+                          We verify applications and deadlines before
+                          publishing. No X links.
+                        </small>
+                      </form>
+                    </details>
                     <label className="search">
                       <Search size={16} />
                       <input
@@ -535,6 +597,7 @@ export function Shell({
                         {activeRows.length === 1
                           ? "opportunity"
                           : "opportunities"}
+                        {model.more && view === "board" ? " loaded" : ""}
                         {!connected ? " · sample listings" : ""}
                       </span>
                       <label>

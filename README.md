@@ -75,3 +75,9 @@ npx convex env set SCOUT_AI_PROVIDER convex
 ```
 
 An unset provider preserves the existing Vercel/direct-OpenAI selection. An explicitly selected provider never silently falls back to another billing account. Roll back explicitly with `SCOUT_AI_PROVIDER=vercel` while the existing Vercel credential is available. Hosted cutover is pending paid-team access; the demo accurately shows the prior Vercel-generated briefing.
+
+### Discovery coverage
+
+Daily discovery now combines Devpost's open feed, public HTML links from 14 event directories, and 16 rotating search queries (plus a topic query when requested). The platform-specific searches cover 12 platforms over two days. Directory fetches run independently of Firecrawl search quotas. All links are leads until an organizer or established event platform confirms an open submission window; an event's end date alone is insufficient. The lablab.ai adapter reads the explicit submission timeline and open offer metadata. Ambiguous sources stay in the verification queue, outside the active catalog. X/Twitter links are rejected.
+
+The board's “Missing an opportunity?” form accepts authenticated community suggestions, deduplicates canonical URLs, and limits each account to five new links per day. It never publishes a submitted link directly. Exact numeric timezone offsets and explicit India, Japan, and Singapore timezone labels are supported by deadline verification. This expands coverage; it is not a claim to index every hackathon on the internet.

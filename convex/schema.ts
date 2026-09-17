@@ -46,6 +46,11 @@ export const opportunityFields = {
 };
 export default defineSchema({
   ...authTables,
+  sourceSubmissions: defineTable({
+    userId: v.id("users"),
+    url: v.string(),
+    submittedAt: v.number(),
+  }).index("by_user_time", ["userId", "submittedAt"]),
   discoveryWorker: defineTable({
     name: v.string(),
     token: v.string(),
