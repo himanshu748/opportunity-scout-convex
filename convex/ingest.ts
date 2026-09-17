@@ -84,6 +84,29 @@ export const checkNext = internalAction({
       return "Skipped unsupported source";
     }
     try {
+      if (
+        source.url ===
+        "https://r-consortium.org/posts/r-consortium-now-accepting-submissions-for-technical-grants/index.html"
+      ) {
+        const response = await fetch(source.url, {
+          signal: AbortSignal.timeout(15000),
+        });
+        if (response.ok) {
+          const text = (await response.text())
+            .replace(/<[^>]*>/g, " ")
+            .replace(/&nbsp;/g, " ")
+            .replace(/\s+/g, " ");
+          const known = rConsortiumSource(source.url, text, Date.now());
+          if (known) {
+            await ctx.runMutation(internal.board.upsert, known);
+            await ctx.runMutation(internal.discovery.complete, {
+              id: source._id,
+              result: "active",
+            });
+            return `Verified official ${known.title} submission window`;
+          }
+        }
+      }
       const firecrawl = new FirecrawlClient(components.firecrawl);
       const page = await firecrawl.scrape(ctx, source.url, {
         formats: isDetailUrl(source.url)

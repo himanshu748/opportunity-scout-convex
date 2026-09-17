@@ -191,6 +191,15 @@ export const ask = action({
         throw new ConvexError(
           "Scout is temporarily rate-limited. Try again in a few minutes.",
         );
+      console.error(
+        "Advisor failure",
+        error instanceof Error ? error.name : "unknown",
+        error instanceof z.ZodError
+          ? error.issues.map((i) => ({ path: i.path, code: i.code }))
+          : error instanceof Error && /grounding/.test(error.message)
+            ? "source grounding rejected"
+            : "generation error",
+      );
       throw new ConvexError(
         "Scout could not finish this request. Please try again.",
       );
