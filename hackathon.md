@@ -29,7 +29,7 @@ Validation: production build and 33 tests pass. Desktop/mobile checks found no h
 
 - Public app URL: https://graceful-spoonbill-850.convex.site (hosted development deployment).
 - Public repository: https://github.com/himanshu748/opportunity-scout-convex
-- Demo video: guided walkthrough in preparation from real hosted app captures.
+- Demo video: 64-second captioned walkthrough prepared from real hosted app captures.
 - Social post: not yet published.
 - Real email reply round trip: still requires verification.
 - Convex account quota: previously exceeded; the new implementation cannot erase already consumed usage.
@@ -59,3 +59,5 @@ Final source review found an extracted winner-announcement date incorrectly used
 Release follow-up: A fresh official R Consortium page check now succeeds through the source adapter without an LLM-derived timezone. Outbound AgentMail status was rechecked as sent. Live AI retries encountered the gateway free-tier 429 again, so reliable live judging still needs model capacity. The demo walkthrough labels its earlier successful 12:25 IST AI result. No submission or social announcement has been sent.
 
 The user confirmed Vercel AI Gateway. Switched the configured OpenAI route from `openai/gpt-4o-mini` to `openai/gpt-4.1-mini`; the connection check and a complete hosted briefing succeeded. Cash and reward claims in generated prose are suppressed in favor of deterministic fields from verified opportunity records. Added a regression test for the observed incorrect financial claim. 47 tests and the build pass. No billing settings changed.
+
+September 17, 13:18 IST: The final hosted GPT-4.1 mini request succeeded and persisted three source-linked recommendations. Confirmed cash came from source records, including the RevenueCat pool, with unconfirmed totals labelled clearly. The 64-second captioned walkthrough uses this fresh hosted result.
