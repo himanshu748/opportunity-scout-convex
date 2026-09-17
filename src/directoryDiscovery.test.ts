@@ -77,3 +77,21 @@ it("handles explicit Asian deadline timezones and rejects mismatched instants", 
     "Submission deadline September 30, 2026 at 20:30 India Standard Time";
   expect(verifiesDeadline("2026-09-30T15:00:00Z", india, india)).toBe(true);
 });
+
+it("takes only active DEV challenge detail links, excluding upcoming and archives", () => {
+  const html = `<h2>Active Challenges</h2>
+    <a href="/mlh-hackathon">Monthly writing</a>
+    <a href="/mlh-hackathon?utm_source=dev">Duplicate</a>
+    <a href="https://example.com/challenge">External</a>
+    <h2>Launching Soon</h2><a href="/challenges/upcoming">Upcoming</a>
+    <h2>Past Challenges</h2><a href="/challenges/old">Old</a>`;
+  expect(directoryLinks(html, "https://dev.to/challenges")).toEqual([
+    "https://dev.to/mlh-hackathon",
+  ]);
+  expect(
+    directoryLinks(
+      '<h2>Past Challenges</h2><a href="/old">Challenge</a>',
+      "https://dev.to/challenges",
+    ),
+  ).toEqual([]);
+});

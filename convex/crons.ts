@@ -7,6 +7,12 @@ crons.daily(
   internal.ingest.refresh,
   {},
 );
+crons.daily(
+  "discover active DEV challenges",
+  { hourUTC: 1, minuteUTC: 35 },
+  internal.directorySources.syncDev,
+  {},
+);
 crons.interval(
   "continue source verification",
   { hours: 1 },
