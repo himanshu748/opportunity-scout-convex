@@ -33,6 +33,7 @@ export function isDetailUrl(value: string) {
       /^\/(c|s)\//.test(p) ||
       [
         "/hackathons",
+        "/hackathons-listing",
         "/ai-hackathons",
         "/jobs",
         "/discover",

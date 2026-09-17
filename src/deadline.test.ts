@@ -22,7 +22,7 @@ describe("discovery breadth and provenance", () => {
       new Set(
         [0, 1, 2, 3].flatMap((i) => discoveryQueries(base + i * 24 * 3600000)),
       ).size,
-    ).toBe(40);
+    ).toBe(41);
   });
   it("deduplicates tracking links and rejects private destinations", () => {
     expect(

@@ -33,6 +33,7 @@ export function discoveryQueries(now: number, topic = "") {
   ];
   const offset = (Math.floor(now / 86400000) % 4) * 6;
   const daily = [
+    `site:hack2skill.com hackathon registration submissions deadline ${month} -site:x.com -site:twitter.com`,
     `independent community hackathon organizer application deadline ${month}`,
     `sponsor developer builder grant applications official ${month}`,
     `developer open source grants funding applications eligibility ${month}`,
@@ -137,6 +138,7 @@ export const directorySources = [
   "https://devpost.com/hackathons?status%5B%5D=open",
   "https://lablab.ai/ai-hackathons",
   "https://devfolio.co/hackathons",
+  "https://hack2skill.com/hackathons-listing",
   "https://unstop.com/hackathons",
   "https://dorahacks.io/hackathon",
   "https://ethglobal.com/events",

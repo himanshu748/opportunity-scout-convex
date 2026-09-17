@@ -95,3 +95,19 @@ it("takes only active DEV challenge detail links, excluding upcoming and archive
     ),
   ).toEqual([]);
 });
+
+it("includes Hack2Skill search daily and treats its index as a discovery bridge", async () => {
+  const { directorySources } = await import("./discoveryPlan");
+  const { isDetailUrl } = await import("./availability");
+  expect(directorySources).toContain(
+    "https://hack2skill.com/hackathons-listing",
+  );
+  for (let day = 17; day < 21; day++)
+    expect(
+      discoveryQueries(Date.UTC(2026, 8, day)).some((q) =>
+        q.includes("site:hack2skill.com"),
+      ),
+    ).toBe(true);
+  expect(isDetailUrl("https://hack2skill.com/hackathons-listing")).toBe(false);
+  expect(isDetailUrl("https://hack2skill.com/hack/example")).toBe(true);
+});
