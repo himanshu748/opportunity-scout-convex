@@ -1,0 +1,44 @@
+{
+  "name": "opportunity-scout",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "backend": "convex dev",
+    "postinstall": "patch-package",
+    "deploy": "static-hosting deploy",
+    "deploy:preview": "static-hosting upload --build"
+  },
+  "dependencies": {
+    "@agentmail/convex": "latest",
+    "@ai-sdk/gateway": "^4.0.80",
+    "@auth/core": "^0.41.1",
+    "@convex-dev/auth": "latest",
+    "@convex-dev/static-hosting": "^0.2.1",
+    "@firecrawl/firecrawl-convex": "latest",
+    "@mastra/convex": "latest",
+    "@mastra/core": "latest",
+    "@mastra/memory": "latest",
+    "convex": "latest",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-markdown": "^10.1.0",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "patch-package": "^8.0.1",
+    "prettier": "^3.9.6",
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}
