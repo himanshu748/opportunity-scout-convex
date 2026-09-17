@@ -29,7 +29,7 @@ Validation: production build and 33 tests pass. Desktop/mobile checks found no h
 
 - Public app URL: https://graceful-spoonbill-850.convex.site (hosted development deployment).
 - Public repository: https://github.com/himanshu748/opportunity-scout-convex
-- Demo video: 64-second captioned walkthrough prepared from real hosted app captures.
+- Demo video: [64-second captioned walkthrough](https://drive.google.com/file/d/1Qx-wNIrZ9GYO3j78sQm42wcHX6a-z9Qp/view) prepared from real hosted app captures. Google Drive link viewing is enabled; player duration and playback were verified.
 - Social post: not yet published.
 - Real email reply round trip: still requires verification.
 - Convex account quota: previously exceeded; the new implementation cannot erase already consumed usage.
