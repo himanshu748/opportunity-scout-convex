@@ -57,3 +57,21 @@ npm run deploy         # Publish a separately configured production deployment
 ## Known limits
 
 The account is above its free-plan quota and may experience service interruption until capacity is resolved. The AI gateway can return rate limits. Public-web search is incomplete; X/Twitter ingestion is disabled. Listed prizes are distinct from source-confirmed USD cash pools. Remote participation does not establish geographic eligibility. Rolling grants without an exact closing date are currently excluded. Email sending has been verified, but a real recipient reply round trip remains unverified.
+
+## Convex AI Gateway cutover
+
+The advisor, daily briefing, weekly digest, and digest-reply refinement share the same Mastra model route. `SCOUT_AI_PROVIDER=convex` selects Convex AI Gateway with a short-lived deployment token from `getServiceToken("ai-gateway")`. Tokens stay inside the action. `OPENAI_MODEL` remains `openai/gpt-4.1-mini`. Firecrawl discovery and AgentMail delivery remain their own services.
+
+Convex AI Gateway requires a paid Convex team. Before changing the live route, redeem any billing promo on the correct team, confirm its credit terms, set a suitable spending limit, and verify access:
+
+```sh
+npx convex run advisor:smoke '{"provider":"convex"}'
+```
+
+Only after that succeeds, activate the route and test a full briefing:
+
+```sh
+npx convex env set SCOUT_AI_PROVIDER convex
+```
+
+An unset provider preserves the existing Vercel/direct-OpenAI selection. An explicitly selected provider never silently falls back to another billing account. Roll back explicitly with `SCOUT_AI_PROVIDER=vercel` while the existing Vercel credential is available. Hosted cutover is pending paid-team access; the demo accurately shows the prior Vercel-generated briefing.

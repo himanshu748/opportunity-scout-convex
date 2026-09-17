@@ -8,24 +8,43 @@ import { createTool } from "@mastra/core/tools";
 import { Memory } from "@mastra/memory";
 import { ConvexStore } from "@mastra/convex";
 import { createGateway } from "@ai-sdk/gateway";
+import { getServiceToken } from "convex/server";
+import {
+  aiProvider,
+  hasAiConfiguration,
+  type AiProvider,
+} from "../src/aiRouting";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { action, internalAction, type ActionCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { matchOpportunity, type Profile } from "../src/matching";
-export function model() {
-  return process.env.AI_GATEWAY_API_KEY
-    ? createGateway({ apiKey: process.env.AI_GATEWAY_API_KEY })(
-        process.env.OPENAI_MODEL ?? "openai/gpt-4.1-mini",
-      )
-    : (process.env.OPENAI_MODEL ?? "openai/gpt-4.1-mini");
+export async function model(provider: AiProvider = aiProvider(process.env)) {
+  const modelId = process.env.OPENAI_MODEL ?? "openai/gpt-4.1-mini";
+  if (!modelId.startsWith("openai/"))
+    throw new Error("Scout requires an OpenAI model in provider/model form.");
+  if (provider === "convex") {
+    return {
+      providerId: "convex",
+      modelId,
+      url: "https://ai-gateway.convex.dev/v1",
+      apiKey: await getServiceToken("ai-gateway"),
+    };
+  }
+  if (provider === "vercel") {
+    if (!process.env.AI_GATEWAY_API_KEY)
+      throw new Error("Vercel AI Gateway is not configured.");
+    return createGateway({ apiKey: process.env.AI_GATEWAY_API_KEY })(modelId);
+  }
+  if (!process.env.OPENAI_API_KEY) throw new Error("OpenAI is not configured.");
+  return modelId;
 }
 async function build(
   ctx: ActionCtx,
   userId: Id<"users">,
   prompt: string,
 ): Promise<string> {
-  if (!process.env.AI_GATEWAY_API_KEY && !process.env.OPENAI_API_KEY)
+  if (!hasAiConfiguration(process.env))
     throw new Error("OpenAI is not connected yet.");
   const profile = await ctx.runQuery(internal.profiles.get, { userId });
   if (!profile) throw new Error("Save your skills and time preferences first.");
@@ -44,7 +63,7 @@ async function build(
   const agent = new Agent({
     id: "opportunity-advisor",
     name: "Scout",
-    model: model(),
+    model: await model(),
     memory: new Memory({
       storage: store,
       options: {
@@ -236,14 +255,18 @@ export const generate = internalAction({
     await build(ctx, userId, prompt),
 });
 export const smoke = internalAction({
-  args: {},
+  args: {
+    provider: v.optional(
+      v.union(v.literal("convex"), v.literal("vercel"), v.literal("openai")),
+    ),
+  },
   returns: v.object({ ok: v.boolean(), text: v.string() }),
-  handler: async () => {
+  handler: async (_ctx, { provider }) => {
     const agent = new Agent({
       id: "scout-smoke",
       name: "Connection check",
       instructions: "Return the word connected.",
-      model: model(),
+      model: await model(provider),
     });
     const result = await agent.generate("Confirm the model connection.");
     return {

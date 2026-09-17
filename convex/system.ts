@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
+import { hasAiConfiguration } from "../src/aiRouting";
 export const status = query({
   args: {},
   returns: v.object({
@@ -8,14 +9,13 @@ export const status = query({
     email: v.boolean(),
   }),
   handler: async () => ({
-    ai:
-      !!(process.env.OPENAI_API_KEY || process.env.AI_GATEWAY_API_KEY) &&
-      !!process.env.CONVEX_ADMIN_KEY,
+    ai: hasAiConfiguration(process.env) && !!process.env.CONVEX_ADMIN_KEY,
     firecrawl: !!process.env.FIRECRAWL_API_KEY,
     email:
       !!process.env.AGENTMAIL_API_KEY &&
       !!process.env.AGENTMAIL_INBOX_ID &&
-      (!!process.env.AGENTMAIL_WEBHOOK_SECRET || process.env.SCOUT_EMAIL_POLLING === "true") &&
+      (!!process.env.AGENTMAIL_WEBHOOK_SECRET ||
+        process.env.SCOUT_EMAIL_POLLING === "true") &&
       process.env.SCOUT_EMAIL_ENABLED === "true",
   }),
 });

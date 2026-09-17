@@ -29,7 +29,7 @@ Validation: production build and 33 tests pass. Desktop/mobile checks found no h
 
 - Public app URL: https://graceful-spoonbill-850.convex.site (hosted development deployment).
 - Public repository: https://github.com/himanshu748/opportunity-scout-convex
-- Demo video: [64-second captioned walkthrough](https://drive.google.com/file/d/1Qx-wNIrZ9GYO3j78sQm42wcHX6a-z9Qp/view) prepared from real hosted app captures. Google Drive link viewing is enabled; player duration and playback were verified.
+- Demo video: [73-second narrated walkthrough](https://drive.google.com/file/d/1Qx-wNIrZ9GYO3j78sQm42wcHX6a-z9Qp/view) edited from fresh higher-resolution hosted-app captures, with Deepgram Aura 2 narration and closer views of the cash breakdown and saved AI briefing. Google Drive link viewing is enabled.
 - Social post: not yet published.
 - Real email reply round trip: still requires verification.
 - Convex account quota: previously exceeded; the new implementation cannot erase already consumed usage.
@@ -61,3 +61,7 @@ Release follow-up: A fresh official R Consortium page check now succeeds through
 The user confirmed Vercel AI Gateway. Switched the configured OpenAI route from `openai/gpt-4o-mini` to `openai/gpt-4.1-mini`; the connection check and a complete hosted briefing succeeded. Cash and reward claims in generated prose are suppressed in favor of deterministic fields from verified opportunity records. Added a regression test for the observed incorrect financial claim. 47 tests and the build pass. No billing settings changed.
 
 September 17, 13:18 IST: The final hosted GPT-4.1 mini request succeeded and persisted three source-linked recommendations. Confirmed cash came from source records, including the RevenueCat pool, with unconfirmed totals labelled clearly. The 64-second captioned walkthrough uses this fresh hosted result.
+
+September 17, gateway preparation: Added an explicit Convex AI Gateway route shared by the Mastra advisor, daily briefings, weekly digest generation, and reply refinement. It uses Convex's deployment-scoped service token and an OpenAI-compatible endpoint without adding dependencies. All 50 tests, TypeScript, build, formatting checks, and the Convex push passed. The hosted Convex probe returned AiGatewayDisabled because this team is on Free. The existing Vercel route returned Connected, so it remains active until the team enables paid gateway access. No claim of a completed Convex gateway cutover is made.
+
+The Drive demo was replaced in place with a 72.8-second 1080p/60fps edit using fresh higher-resolution hosted captures, Deepgram Aura 2 narration, and captions. Public link permissions were retained. Drive playback and the selected 1080p quality were verified; its earlier player setting was 360p. The saved AI briefing shown in this demo was generated through Vercel before any gateway cutover.
