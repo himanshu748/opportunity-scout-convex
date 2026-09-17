@@ -1,6 +1,6 @@
 # Opportunity Scout
 
-[Open the live app](https://graceful-spoonbill-850.convex.site) · [Build log](hackathon.md)
+[Open the live app](https://graceful-spoonbill-850.convex.site) · [Source](https://github.com/himanshu748/opportunity-scout-convex) · [Build log](hackathon.md)
 
 A React + TypeScript app with a public landing page and a Convex-backed opportunity workspace. The workspace uses Convex Auth, Firecrawl discovery, a Mastra advisor running an OpenAI model, and an AgentMail digest component.
 

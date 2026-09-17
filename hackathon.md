@@ -28,8 +28,8 @@ Validation: production build and 33 tests pass. Desktop/mobile checks found no h
 ## Submission status — not yet complete
 
 - Public app URL: https://graceful-spoonbill-850.convex.site (hosted development deployment).
-- Public repository: publication in progress.
-- Demo video: not yet recorded.
+- Public repository: https://github.com/himanshu748/opportunity-scout-convex
+- Demo video: guided walkthrough in preparation from real hosted app captures.
 - Social post: not yet published.
 - Real email reply round trip: still requires verification.
 - Convex account quota: previously exceeded; the new implementation cannot erase already consumed usage.
@@ -49,3 +49,5 @@ Live browser verification: new category filters and briefing entry point render 
 September 17, 12:25 IST: Retried the full daily briefing through the signed-in browser. The Mastra/OpenAI action succeeded, stored a new shortlist, and displayed three source-linked opportunities with deadlines, eligibility caveats, tradeoffs, next steps, and suggested plans. This resolves the earlier end-to-end verification gap; the gateway's free-tier rate limit can still recur.
 
 September 17, release preparation: Fixed a Firecrawl integration error caused by Zod's `$schema` metadata being rejected as a Convex argument. Added a regression test that serializes the actual extraction schema through Convex. An official R Consortium grant now passes extraction, source validation, and catalog persistence, with its October 1, 2026, 23:59 US Eastern deadline. Requeued 326 failed source checks with bounded sequential processing. Published the frontend using Convex's static-hosting component and verified the public landing page and live catalog. 43 tests pass. This is a public development deployment; the account still reports a free-plan quota warning.
+
+Hosted account checks passed: sign-up, save, unsave, and profile editing. GitHub Actions passed the clean install, 43 tests, and build on the published repository.
