@@ -39,7 +39,7 @@ Scout uses an explicitly authorized shared AgentMail inbox, configured with `AGE
 
 ## Verification
 
-Production build and 43 unit tests pass. Live checks exercised Convex sign-in, profile isolation, private storage, saving an opportunity, source discovery, and the advisor. Desktop/mobile checks confirm buttons use 4 px vertical/8 px horizontal padding and workspace icons are 16 px. An isolated synthetic deadline test verified automatic removal without writing a test opportunity to the real catalog.
+Production build and 44 unit tests pass. Live checks exercised Convex sign-in, profile isolation, private storage, saving an opportunity, source discovery, and the advisor. Desktop/mobile checks confirm buttons use 4 px vertical/8 px horizontal padding and workspace icons are 16 px. An isolated synthetic deadline test verified automatic removal without writing a test opportunity to the real catalog.
 
 Discovery counts are refreshed hourly instead of scanning the source queue every five minutes. The daily job runs on Convex even when the browser is closed. Deadline expiry remains independently scheduled.
 
