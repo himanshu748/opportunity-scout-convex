@@ -163,3 +163,46 @@ it("known conflicts stay below eligible matches even with more matching skills",
     ),
   ).toBeGreaterThan(0);
 });
+
+it("recognizes a Bengaluru venue as India without requiring the country in its address", () => {
+  expect(
+    matchOpportunity(
+      {
+        ...opportunity,
+        remote: false,
+        location: "Tripura Vasini Palace Grounds, Bengaluru",
+      },
+      profile,
+      100,
+    ).blockers,
+  ).not.toContain("Location does not match");
+});
+it("keeps unknown venue geography uncertain rather than claiming a conflict", () => {
+  const fit = matchOpportunity(
+    { ...opportunity, remote: false, location: "Pioneer Shull Building" },
+    profile,
+    100,
+  );
+  expect(fit.blockers).not.toContain("Location does not match");
+  expect(fit.unknowns).toContain("Venue location needs checking");
+});
+it("applies country exclusions to recognized cities and country aliases", () => {
+  expect(
+    matchOpportunity(
+      {
+        ...opportunity,
+        excludedRegions: ["India"],
+        regionEvidence: "India excluded",
+      },
+      { ...profile, location: "Bangalore" },
+      100,
+    ).blockers,
+  ).toContain("Your location is explicitly excluded by the rules");
+  expect(
+    matchOpportunity(
+      { ...opportunity, remote: false, location: "Boston, USA" },
+      { ...profile, location: "United States" },
+      100,
+    ).blockers,
+  ).not.toContain("Location does not match");
+});

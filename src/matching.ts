@@ -64,12 +64,66 @@ function skillName(value: string) {
   const key = normalized(value);
   return skillAliases[key] ?? key;
 }
-function locationParts(value: string) {
-  return value
-    .split(/[,;|]/)
-    .map(normalized)
-    .filter(Boolean)
-    .map((p) => (p === "bangalore" ? "bengaluru" : p));
+// Deliberately bounded geography hints. Unrecognized venues remain unknown.
+const cityCountries: Record<string, string> = {
+  bengaluru: "india",
+  bangalore: "india",
+  mumbai: "india",
+  delhi: "india",
+  "new delhi": "india",
+  hyderabad: "india",
+  chennai: "india",
+  pune: "india",
+  kolkata: "india",
+  london: "united kingdom",
+  manchester: "united kingdom",
+  york: "united kingdom",
+  "new york": "united states",
+  boston: "united states",
+  baltimore: "united states",
+  "san francisco": "united states",
+  munich: "germany",
+  berlin: "germany",
+  singapore: "singapore",
+  lahore: "pakistan",
+  toronto: "canada",
+  sydney: "australia",
+};
+const countryAliases: Record<string, string> = {
+  uk: "united kingdom",
+  "u.k.": "united kingdom",
+  britain: "united kingdom",
+  usa: "united states",
+  us: "united states",
+  "u.s.a.": "united states",
+  "united states of america": "united states",
+};
+function placeName(value: string) {
+  const name = normalized(value);
+  return countryAliases[name] ?? (name === "bangalore" ? "bengaluru" : name);
+}
+function geography(value: string) {
+  const parts = value.split(/[,;|]/).map(placeName).filter(Boolean);
+  const countries = new Set(Object.values(cityCountries));
+  const country = parts.find((p) => countries.has(p));
+  const city = parts.find((p) => p in cityCountries && !countries.has(p));
+  return {
+    parts,
+    city,
+    country: country ?? (city ? cityCountries[city] : undefined),
+  };
+}
+function locationFit(
+  venue: string,
+  home: string,
+): "match" | "conflict" | "unknown" {
+  const a = geography(venue),
+    b = geography(home);
+  if (a.city && b.city) return a.city === b.city ? "match" : "conflict";
+  if (a.country && b.country)
+    return a.country === b.country ? "match" : "conflict";
+  if (a.parts.some((p) => b.parts.includes(p))) return "match";
+  return "unknown";
 }
 export function matchOpportunity(
   opportunity: Opportunity,
@@ -86,16 +140,12 @@ export function matchOpportunity(
     blockers.push("Requires more time than your weekly budget");
   if (profile.solo && opportunity.solo === false)
     blockers.push("A team is required");
-  if (
-    !opportunity.remote &&
-    profile.location.trim() &&
-    !locationParts(opportunity.location).includes(
-      locationParts(profile.location)[0],
-    )
-  )
+  const placeFit = locationFit(opportunity.location, profile.location);
+  if (!opportunity.remote && profile.location.trim() && placeFit === "conflict")
     blockers.push("Location does not match");
-  const regions = locationParts(profile.location);
-  const knownRegion = (value: string) => regions.includes(normalized(value));
+  const home = geography(profile.location);
+  const knownRegion = (value: string) =>
+    home.parts.includes(placeName(value)) || home.country === placeName(value);
   if (
     opportunity.regionEvidence &&
     opportunity.excludedRegions?.some(knownRegion)
@@ -121,6 +171,8 @@ export function matchOpportunity(
     unknowns.push("Remote does not establish geographic eligibility");
   if (!opportunity.remote && !profile.location.trim())
     unknowns.push("Add your location to check in-person opportunities");
+  if (!opportunity.remote && profile.location.trim() && placeFit === "unknown")
+    unknowns.push("Venue location needs checking");
   if (opportunity.hours === null)
     unknowns.push("Time commitment needs checking");
   if (profile.solo && opportunity.solo === null)
