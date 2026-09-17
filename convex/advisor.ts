@@ -2,6 +2,7 @@
 import { v, ConvexError } from "convex/values";
 import { z } from "zod";
 import { isGroundedPick, nonFinancialAdvice } from "../src/advisorGrounding";
+import { cashLabel } from "../src/prizeFacts";
 import { confirmedCashUSD } from "../src/opportunitySort";
 import { Agent } from "@mastra/core/agent";
 import { createTool } from "@mastra/core/tools";
@@ -107,6 +108,7 @@ async function build(
               reward: o.reward,
               confirmedCashUSD: confirmedCashUSD(o),
               cashEvidence: o.cashEvidence ?? null,
+              cashSummary: cashLabel(o),
               eligibleRegions: o.eligibleRegions ?? [],
               excludedRegions: o.excludedRegions ?? [],
               location: o.location,
@@ -203,7 +205,7 @@ async function build(
       picks
         .map(
           (p, i) =>
-            `### ${i + 1}. [${p.source.title}](${p.source.url})\n\n**Deadline:** ${p.source.deadline ? new Date(p.source.deadline).toUTCString() : "Not confirmed"}\n\n**Listed rewards:** ${p.source.reward}\n\n**Confirmed cash pool:** ${confirmedCashUSD(p.source) === null ? "Not confirmed from the source" : `US$${confirmedCashUSD(p.source)!.toLocaleString("en-US")}`}\n\n**Why consider it:** ${p.why}\n\n**Tradeoff:** ${p.tradeoff}\n\n**Check first:** ${p.source.eligibility} ${p.source.fit.unknowns.join(". ")}.\n\n**Next step:** ${p.nextStep}\n\n**Suggested plan:**\n${p.plan.map((step) => `- ${step}`).join("\n")}`,
+            `### ${i + 1}. [${p.source.title}](${p.source.url})\n\n**Deadline:** ${p.source.deadline ? new Date(p.source.deadline).toUTCString() : "Not confirmed"}\n\n**Listed rewards:** ${p.source.reward}\n\n**Confirmed cash pool:** ${cashLabel(p.source)}\n\n**Why consider it:** ${p.why}\n\n**Tradeoff:** ${p.tradeoff}\n\n**Check first:** ${p.source.eligibility} ${p.source.fit.unknowns.join(". ")}.\n\n**Next step:** ${p.nextStep}\n\n**Suggested plan:**\n${p.plan.map((step) => `- ${step}`).join("\n")}`,
         )
         .join("\n\n")
     : "No verified active opportunities match that request right now. Try broadening your preferences or check back after the next source refresh.";

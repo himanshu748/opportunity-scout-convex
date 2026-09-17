@@ -25,6 +25,16 @@ export const opportunityFields = {
   location: v.string(),
   remote: v.boolean(),
   reward: v.string(),
+  cashAmount: v.optional(v.number()),
+  cashCurrency: v.optional(v.string()),
+  cashStatus: v.optional(
+    v.union(
+      v.literal("confirmed"),
+      v.literal("nonCash"),
+      v.literal("unpublished"),
+      v.literal("ambiguous"),
+    ),
+  ),
   cashAmountUSD: v.optional(v.number()),
   cashEvidence: v.optional(v.string()),
   cashVerifiedAt: v.optional(v.number()),

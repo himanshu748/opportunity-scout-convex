@@ -125,6 +125,9 @@ export const upsert = internalMutation({
     const fields = {
       ...args,
       ...sortKeys(args),
+      cashAmount: args.cashAmount,
+      cashCurrency: args.cashCurrency,
+      cashStatus: args.cashStatus,
       cashAmountUSD: args.cashAmountUSD,
       cashEvidence: args.cashEvidence,
       cashVerifiedAt: args.cashVerifiedAt,
@@ -199,6 +202,7 @@ export const page = query({
     search: v.optional(v.string()),
     sort: v.optional(
       v.union(
+        v.literal("bestFit"),
         v.literal("endingSoon"),
         v.literal("endingLast"),
         v.literal("cash"),
@@ -317,5 +321,67 @@ export const savedData = query({
       ids: saved.map((s) => s.opportunityId),
       records: records.flatMap((o) => (o && isActiveOpportunity(o) ? [o] : [])),
     };
+  },
+});
+
+/** Operator-only, bounded prize backfill; does not alter source freshness or deadlines. */
+export const updatePrizes = internalMutation({
+  args: {
+    records: v.array(
+      v.object({
+        url: v.string(),
+        reward: v.optional(v.string()),
+        cashAmount: v.optional(v.number()),
+        cashCurrency: v.optional(v.string()),
+        cashStatus: v.optional(
+          v.union(
+            v.literal("confirmed"),
+            v.literal("nonCash"),
+            v.literal("unpublished"),
+            v.literal("ambiguous"),
+          ),
+        ),
+        cashAmountUSD: v.optional(v.number()),
+        cashEvidence: v.optional(v.string()),
+        cashVerifiedAt: v.optional(v.number()),
+      }),
+    ),
+  },
+  returns: v.number(),
+  handler: async (ctx, { records }) => {
+    if (records.length > 50) throw new Error("Maximum 50 records per batch");
+    let updated = 0;
+    for (const { url, ...cash } of records) {
+      const item = await ctx.db
+        .query("opportunities")
+        .withIndex("by_url", (q) => q.eq("url", url))
+        .unique();
+      if (!item) continue;
+      const fields = {
+        ...(cash.reward !== undefined ? { reward: cash.reward } : {}),
+        cashAmount: cash.cashAmount,
+        cashCurrency: cash.cashCurrency,
+        cashStatus: cash.cashStatus,
+        cashAmountUSD: cash.cashAmountUSD,
+        cashEvidence: cash.cashEvidence,
+        cashVerifiedAt: cash.cashVerifiedAt,
+      };
+      if (
+        fields.cashAmount !== undefined &&
+        (!Number.isFinite(fields.cashAmount) ||
+          fields.cashAmount <= 0 ||
+          !fields.cashCurrency ||
+          !fields.cashEvidence ||
+          !fields.cashVerifiedAt ||
+          fields.cashStatus !== "confirmed")
+      )
+        throw new Error("Incomplete prize evidence");
+      await ctx.db.patch(item._id, {
+        ...fields,
+        ...sortKeys({ ...item, ...fields }),
+      });
+      updated++;
+    }
+    return updated;
   },
 });

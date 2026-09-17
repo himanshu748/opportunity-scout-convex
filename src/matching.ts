@@ -10,6 +10,9 @@ export type Opportunity = {
   location: string;
   remote: boolean;
   reward: string;
+  cashAmount?: number;
+  cashCurrency?: string;
+  cashStatus?: "confirmed" | "nonCash" | "unpublished" | "ambiguous";
   cashAmountUSD?: number;
   cashEvidence?: string;
   cashVerifiedAt?: number;
@@ -49,6 +52,11 @@ const skillAliases: Record<string, string> = {
   reactjs: "react",
   "node.js": "nodejs",
   "artificial intelligence": "ai",
+  "machine learning/ai": "ai",
+  "machine learning": "ai",
+  web: "web development",
+  "web dev": "web development",
+  "full-stack development": "web development",
   "user experience": "ux",
   "user interface": "ui",
 };
@@ -128,4 +136,34 @@ export function matchOpportunity(
       (profile.goal === "earn" && opportunity.kind === "gig" ? 4 : 0) +
       (opportunity.hours !== null ? 1 : 0),
   };
+}
+
+/** Rank a bounded loaded page, preserving hard constraints ahead of skill overlap. */
+export function compareProfileFit(
+  a: Opportunity,
+  b: Opportunity,
+  profile: Profile,
+  now = Date.now(),
+) {
+  const af = matchOpportunity(a, profile, now),
+    bf = matchOpportunity(b, profile, now);
+  return (
+    Number(bf.eligible) - Number(af.eligible) ||
+    bf.score - af.score ||
+    (a.deadline ?? Number.MAX_SAFE_INTEGER) -
+      (b.deadline ?? Number.MAX_SAFE_INTEGER) ||
+    a._id.localeCompare(b._id)
+  );
+}
+export function profileFitLabel(
+  opportunity: Opportunity,
+  profile: Profile,
+  now = Date.now(),
+) {
+  const fit = matchOpportunity(opportunity, profile, now);
+  return (
+    fit.blockers[0] ??
+    (fit.reasons.slice(0, 2).join(" · ") ||
+      "No skill match yet · check the brief")
+  );
 }

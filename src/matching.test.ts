@@ -133,3 +133,33 @@ it("does not claim eligibility from a remote label", () => {
     ).unknowns,
   ).toContain("Residency needs checking: eligible regions are Canada");
 });
+
+import { compareProfileFit, profileFitLabel } from "./matching";
+it("different saved skills produce different board ordering", () => {
+  const react = { ...opportunity, _id: "react", skills: ["React"] };
+  const python = { ...opportunity, _id: "python", skills: ["Python"] };
+  expect(compareProfileFit(react, python, profile, 100)).toBeLessThan(0);
+  expect(
+    compareProfileFit(react, python, { ...profile, skills: ["Python"] }, 100),
+  ).toBeGreaterThan(0);
+  expect(profileFitLabel(react, profile, 100)).toContain(
+    "React matches your skills",
+  );
+});
+it("known conflicts stay below eligible matches even with more matching skills", () => {
+  const blocked = {
+    ...opportunity,
+    _id: "blocked",
+    solo: false,
+    skills: ["React", "AI"],
+  };
+  const allowed = { ...opportunity, _id: "allowed", skills: ["Python"] };
+  expect(
+    compareProfileFit(
+      blocked,
+      allowed,
+      { ...profile, skills: ["React", "AI"] },
+      100,
+    ),
+  ).toBeGreaterThan(0);
+});

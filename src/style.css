@@ -1762,3 +1762,11 @@ button svg {
 .suggest-source small {
   color: var(--muted);
 }
+
+.match-reason {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted, #58665c);
+  font-size: 12px;
+  line-height: 1.5;
+}

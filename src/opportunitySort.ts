@@ -1,5 +1,5 @@
 export type OpportunitySort =
-  "endingSoon" | "endingLast" | "cash" | "prize" | "newest";
+  "bestFit" | "endingSoon" | "endingLast" | "cash" | "prize" | "newest";
 // Only an explicitly labelled USD cash amount is sortable as cash. Never count credits.
 export function cashPrizeUSD(reward: string): number | null {
   const match =

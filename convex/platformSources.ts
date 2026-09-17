@@ -1,12 +1,9 @@
 "use node";
+import { devpostPrizeFacts } from "../src/prizeFacts";
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import {
-  devpostOpportunity,
-  devpostCashPool,
-  type DevpostEvent,
-} from "../src/devpostSource";
+import { devpostOpportunity, type DevpostEvent } from "../src/devpostSource";
 export const sync = internalAction({
   args: { pages: v.optional(v.number()) },
   returns: v.object({
@@ -64,14 +61,14 @@ export const sync = internalAction({
               });
               return;
             }
-            let cashFacts = {};
+            let cashFacts = devpostPrizeFacts(html, "", Date.now());
             if (/in cash/.test(html)) {
               try {
                 const rules = await fetch(`${url.origin}/rules`, {
                   signal: AbortSignal.timeout(20000),
                 });
                 if (rules.ok)
-                  cashFacts = devpostCashPool(
+                  cashFacts = devpostPrizeFacts(
                     html,
                     await rules.text(),
                     Date.now(),

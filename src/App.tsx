@@ -1,8 +1,5 @@
-import {
-  compareOpportunities,
-  confirmedCashUSD,
-  type OpportunitySort,
-} from "./opportunitySort";
+import { compareOpportunities, type OpportunitySort } from "./opportunitySort";
+import { cashLabel } from "./prizeFacts";
 import { ConvexError } from "convex/values";
 import { profileInput } from "./profileInput";
 import Markdown from "react-markdown";
@@ -42,7 +39,13 @@ import type { Id } from "../convex/_generated/dataModel";
 import { downloadDeadline } from "./calendar";
 import { deadlineLabel } from "./deadline";
 import { useExpiringOpportunities } from "./useExpiringOpportunities";
-import { matchOpportunity, type Opportunity, type Profile } from "./matching";
+import {
+  matchOpportunity,
+  compareProfileFit,
+  profileFitLabel,
+  type Opportunity,
+  type Profile,
+} from "./matching";
 const initialProfile: Profile = {
   skills: [],
   location: "",
@@ -193,7 +196,7 @@ export function Shell({
     [sourceUrl, setSourceUrl] = useState(""),
     [submittingSource, setSubmittingSource] = useState(false),
     [search, setSearch] = useState(""),
-    [sort, setSort] = useState<OpportunitySort>("endingSoon"),
+    [sortChoice, setSort] = useState<OpportunitySort | null>(null),
     [selected, setSelected] = useState<string | null>(() =>
       new URLSearchParams(window.location.search).get("opportunity"),
     ),
@@ -246,6 +249,10 @@ export function Shell({
     };
   }, [loginOpen]);
   const profile = editing ? draft : (model.profile ?? draft);
+  const sort: OpportunitySort =
+    sortChoice === "bestFit" && !model.profile
+      ? "endingSoon"
+      : (sortChoice ?? (model.profile ? "bestFit" : "endingSoon"));
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const current = Date.now();
@@ -274,9 +281,15 @@ export function Shell({
         `${o.title} ${o.organization} ${o.skills.join(" ")}`
           .toLowerCase()
           .includes(search.toLowerCase())) &&
-      (!onlyFit || matchOpportunity(o, profile).eligible),
+      (!onlyFit ||
+        !model.profile ||
+        matchOpportunity(o, model.profile, now).eligible),
   );
-  rows.sort((a, b) => compareOpportunities(a, b, sort));
+  rows.sort((a, b) =>
+    sort === "bestFit" && model.profile
+      ? compareProfileFit(a, b, model.profile, now)
+      : compareOpportunities(a, b, sort),
+  );
   const activeRows = rows.filter((o) => !o.departingAt);
   const savedCount = (model.savedList ?? visibleOpportunities).filter((o) =>
     model.saved.includes(o._id),
@@ -570,6 +583,9 @@ export function Shell({
                           setSort(event.target.value as OpportunitySort)
                         }
                       >
+                        {model.profile && (
+                          <option value="bestFit">Best match for me</option>
+                        )}
                         <option value="endingSoon">Ending soonest</option>
                         <option value="endingLast">Most time remaining</option>
                         <option value="prize">
@@ -579,6 +595,12 @@ export function Shell({
                         <option value="newest">Recently added</option>
                       </select>
                     </label>
+                    {sort === "bestFit" && (
+                      <p className="sort-note">
+                        Ranked by your saved skills, time, location and goals
+                        among loaded opportunities. Load more to compare more.
+                      </p>
+                    )}
                     {sort === "prize" && (
                       <p className="sort-note">
                         Listed prize pools may include non-cash rewards. This is
@@ -603,7 +625,8 @@ export function Shell({
                       <label>
                         <input
                           type="checkbox"
-                          checked={onlyFit}
+                          disabled={!model.profile}
+                          checked={onlyFit && !!model.profile}
                           onChange={(e) => setOnlyFit(e.target.checked)}
                         />{" "}
                         No known conflicts
@@ -705,11 +728,12 @@ export function Shell({
                               <span className="row-reward">
                                 {o.reward || "Prize details not listed"}
                               </span>
-                              <span className="cash-prize">
-                                {confirmedCashUSD(o) === null
-                                  ? "Cash pool not confirmed"
-                                  : `${new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(confirmedCashUSD(o)!)} confirmed cash pool`}
-                              </span>
+                              <span className="cash-prize">{cashLabel(o)}</span>
+                              {model.profile && (
+                                <span className="match-reason">
+                                  {profileFitLabel(o, model.profile, now)}
+                                </span>
+                              )}
                               <span className="tags">
                                 {o.skills.slice(0, 3).map((s) => (
                                   <span key={s}>{s}</span>
@@ -802,11 +826,7 @@ export function Shell({
                         </div>
                         <div>
                           <dt>Cash prize pool</dt>
-                          <dd>
-                            {confirmedCashUSD(item) === null
-                              ? "Not confirmed from the source"
-                              : `${new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(confirmedCashUSD(item)!)} USD · source confirmed`}
-                          </dd>
+                          <dd>{cashLabel(item)}</dd>
                         </div>
                         <div>
                           <dt>Where</dt>
@@ -851,7 +871,7 @@ export function Shell({
                         {item.evidence && (
                           <blockquote>{item.evidence}</blockquote>
                         )}
-                        {confirmedCashUSD(item) !== null && (
+                        {item.cashEvidence && (
                           <blockquote>{item.cashEvidence}</blockquote>
                         )}
                         <p className="source-note">

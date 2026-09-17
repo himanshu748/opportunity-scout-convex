@@ -1,3 +1,4 @@
+import type { PrizeFacts } from "./prizeFacts";
 /** Use the organizer's explicit submission timeline, never schema.org endDate. */
 export function lablabOpportunity(url: string, html: string, now: number) {
   if (!/^https:\/\/lablab\.ai\/ai-hackathons\/[-a-z\d]+$/.test(url))
@@ -52,6 +53,7 @@ export function lablabOpportunity(url: string, html: string, now: number) {
       : "Check organizer location",
     remote,
     reward: "See organizer prize breakdown; cash pool not yet confirmed",
+    ...lablabPrizes(description, now),
     deadline,
     hours: null,
     solo: null,
@@ -65,5 +67,28 @@ export function lablabOpportunity(url: string, html: string, now: number) {
     origin: "source" as const,
     acceptingSubmissions: true,
     deadlineConfirmed: true,
+  };
+}
+
+/** A published total and its cash/credits split must reconcile. No FX conversion. */
+export function lablabPrizes(
+  description: string,
+  now: number,
+): PrizeFacts & { reward?: string } {
+  const m =
+    /\$([\d,]+) Prize Pool \(\$([\d.]+)(k)? cash \+ \$([\d.]+)(k)? in [^)]+credits\)/i.exec(
+      description,
+    );
+  if (!m) return {};
+  const cash = Number(m[2]) * (m[3] ? 1000 : 1);
+  const credits = Number(m[4]) * (m[5] ? 1000 : 1);
+  if (cash <= 0 || cash + credits !== Number(m[1].replace(/,/g, ""))) return {};
+  return {
+    cashAmount: cash,
+    cashCurrency: "$",
+    cashStatus: "confirmed",
+    cashVerifiedAt: now,
+    cashEvidence: m[0],
+    reward: `$${cash.toLocaleString("en-US")} cash + $${credits.toLocaleString("en-US")} credits (dollar currency unspecified)`,
   };
 }
