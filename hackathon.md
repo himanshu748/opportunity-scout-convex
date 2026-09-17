@@ -34,7 +34,7 @@ Validation: production build and 33 tests pass. Desktop/mobile checks found no h
 - Real email reply round trip: still requires verification.
 - Convex account: Starter and AI Gateway enabled on September 17. The team monthly disable threshold is $5; earlier usage remains billed against the team's limits.
 - Astra/Product Hunt: [launch](https://www.producthunt.com/products/opportunity-scout?launch=opportunity-scout) successfully scheduled for September 18, 2026 at 12:01 AM Pacific (12:31 PM IST), with the GPT-6 Astra challenge selected. See the [launch package](launch/product-hunt.md).
-- All Gas submission: VibeApps returned a server error on two completed submission attempts. No All Gas submission receipt exists yet.
+- All Gas submission: VibeApps returned a server error on three completed submission attempts. No All Gas submission receipt exists yet.
 
 Official requirements: https://www.convex.dev/hackathons/all-gas
 
@@ -77,3 +77,5 @@ Replaced the Drive video in place with a 78.43-second narrated, captioned edit s
 September 17, launch scheduling: Product Hunt displayed “Successfully Scheduled!” and its prelaunch dashboard reports Scheduled for the September 18 launch. The challenge response describes Astra's build contribution and explicitly identifies GPT-4.1 mini as the runtime model. Native video posts were published on X and LinkedIn with all five company tags, including Mastra. X playback completed; LinkedIn playback and captions were verified. The first X receipt did not persist and is not used as evidence. The final X revision uses the current @mastra handle.
 
 The All Gas form returned `[CONVEX M(stories:submit)] Server Error` on two attempts (request IDs `bc15d25162069ac9` and `d41f74a29e633bd2`). This remains an incomplete submission, despite the app, public repository, demo, and social posts being available.
+
+September 17, demo upload: Published the approved demo as an [unlisted YouTube video](https://www.youtube.com/watch?v=vnmZcJOoM6o), with English timed captions. Verified 1080p playback. Product Hunt accepted the video into its gallery, and its prelaunch dashboard marks Video / Loom complete. Saved all six tool shoutouts and checked the official Astra launch guide. Retried the All Gas form with the new YouTube URL, screenshot, repository and social links; Vibe Apps again returned Server Error (request ID `404252f3c4cb5dd5`). No receipt was issued.

@@ -31,7 +31,7 @@ Description:
 
 Find active hackathons, grants and developer gigs. Compare source-confirmed cash prizes and deadlines, save a shortlist, and ask an OpenAI advisor what fits your skills and schedule. Built with GPT-6 Astra in Codex.
 
-Suggested topics, subject to the available Product Hunt taxonomy: Developer Tools, Artificial Intelligence, Productivity.
+Saved topics: Productivity, Artificial Intelligence, OpenAI Day.
 
 Shoutouts: OpenAI, ChatGPT/Codex, Convex, Mastra, Firecrawl, AgentMail.
 
@@ -48,9 +48,11 @@ Discovery is still growing. If Scout misses an event, you can submit its officia
 ## Assets and verification
 
 - Repository: https://github.com/himanshu748/opportunity-scout-convex
-- Demo: https://drive.google.com/file/d/1Qx-wNIrZ9GYO3j78sQm42wcHX6a-z9Qp/view
+- YouTube demo (unlisted): https://www.youtube.com/watch?v=vnmZcJOoM6o
+- Drive backup: https://drive.google.com/file/d/1Qx-wNIrZ9GYO3j78sQm42wcHX6a-z9Qp/view
 - Use actual screenshots of the discovery board, confirmed cash breakdown, saved opportunities, and personalized advisor output.
-- Drive is a shareable demo link. Confirm whether the Product Hunt video field requires YouTube or Loom before placing it there.
+- Product Hunt accepts YouTube or Loom for its video field. The YouTube demo was saved to the gallery on September 17; the prelaunch dashboard confirms Video / Loom is complete. A direct YouTube link is also saved under launch links. Initial metadata lookups failed before a subsequent save succeeded.
+- YouTube confirms Unlisted visibility and no copyright issues found. English timed captions were uploaded, and browser playback advanced at 1920×1080; 1080p60 is available in the quality menu.
 - The hosted app currently uses a development Convex deployment.
 - Outbound email arrival was verified in the authorized recipient's Gmail inbox on September 17. A recipient reply round trip remains unverified.
 - Do not claim complete internet coverage, guaranteed eligibility, or a challenge submission until Product Hunt confirms it.
@@ -63,3 +65,7 @@ On September 17, the local model metadata for Scout's build task was inspected: 
 RentPilot also has Astra work, but its build task mixes models. Scout is the selected entry because its build provenance is clearer and it has a working public app, repository, and demo.
 
 Official launch guide: https://app.notion.com/p/teamhome1431/GPT-6-Astra-Challenge-Product-Hunt-Launch-Guide-3d62e1256c9e80f39bccdd2ab93bb306
+
+## September 17 guide check
+
+Checked the official guide against the saved entry: September 18 launch date, concise name and tagline, 215-character description (under the guide's 260-character limit), actual product screenshots, working demo, three topics, and first maker comment. OpenAI, ChatGPT, Convex, Mastra, Firecrawl and AgentMail shoutouts are saved. The prelaunch dashboard marks shoutouts, video and first comment complete. Launch-day promotion should invite feedback rather than request or incentivize upvotes. These checks do not guarantee eligibility or a judging outcome.
