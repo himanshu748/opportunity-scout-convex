@@ -2,11 +2,14 @@ import { v } from "convex/values";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { mail } from "./email";
 import { isActiveOpportunity } from "../src/availability";
-const testKey = "authorized-scout-rentpilot-connection-2026-09-14";
+const baseTestKey = "authorized-scout-rentpilot-connection-2026-09-14";
 export const send = internalMutation({
-  args: {},
+  args: { testRun: v.optional(v.literal("launch-2026-09-17")) },
   returns: v.string(),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
+    const testKey = args.testRun
+      ? `${baseTestKey}:${args.testRun}`
+      : baseTestKey;
     const existing = await ctx.db
       .query("runs")
       .withIndex("by_kind", (q) => q.eq("kind", testKey))
@@ -59,7 +62,9 @@ export const send = internalMutation({
       );
     const outboundId = await mail.sendMessage(ctx, inbox, {
       to: recipient,
-      subject: "Opportunity Scout — RentPilot inbox connected",
+      subject: args.testRun
+        ? "Opportunity Scout — launch email check, September 17"
+        : "Opportunity Scout — RentPilot inbox connected",
       text: body,
       labels: ["opportunity-scout-test"],
     });
@@ -80,9 +85,12 @@ export const send = internalMutation({
   },
 });
 export const status = internalQuery({
-  args: {},
+  args: { testRun: v.optional(v.literal("launch-2026-09-17")) },
   returns: v.any(),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
+    const testKey = args.testRun
+      ? `${baseTestKey}:${args.testRun}`
+      : baseTestKey;
     const row = await ctx.db
       .query("runs")
       .withIndex("by_kind", (q) => q.eq("kind", testKey))

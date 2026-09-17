@@ -29,10 +29,11 @@ Validation: production build and 33 tests pass. Desktop/mobile checks found no h
 
 - Public app URL: https://graceful-spoonbill-850.convex.site (hosted development deployment).
 - Public repository: https://github.com/himanshu748/opportunity-scout-convex
-- Demo video: [73-second narrated walkthrough](https://drive.google.com/file/d/1Qx-wNIrZ9GYO3j78sQm42wcHX6a-z9Qp/view) edited from fresh higher-resolution hosted-app captures, with Deepgram Aura 2 narration and closer views of the cash breakdown and saved AI briefing. Google Drive link viewing is enabled.
+- Demo video: [78-second narrated walkthrough](https://drive.google.com/file/d/1Qx-wNIrZ9GYO3j78sQm42wcHX6a-z9Qp/view) with Deepgram Aura 2 narration, captions, current discovery and cash views, and a fresh briefing generated through Convex AI Gateway. Edited from real browser captures and exported at 1080p/60fps. Google Drive link viewing is enabled.
 - Social post: not yet published.
 - Real email reply round trip: still requires verification.
-- Convex account quota: previously exceeded; the new implementation cannot erase already consumed usage.
+- Convex account: Starter and AI Gateway enabled on September 17. The team monthly disable threshold is $5; earlier usage remains billed against the team's limits.
+- Astra/Product Hunt: selected Scout and prepared the [launch package](launch/product-hunt.md). Submission and scheduling are not yet confirmed.
 
 Official requirements: https://www.convex.dev/hackathons/all-gas
 
@@ -65,3 +66,9 @@ September 17, 13:18 IST: The final hosted GPT-4.1 mini request succeeded and per
 September 17, gateway preparation: Added an explicit Convex AI Gateway route shared by the Mastra advisor, daily briefings, weekly digest generation, and reply refinement. It uses Convex's deployment-scoped service token and an OpenAI-compatible endpoint without adding dependencies. All 50 tests, TypeScript, build, formatting checks, and the Convex push passed. The hosted Convex probe returned AiGatewayDisabled because this team is on Free. The existing Vercel route returned Connected, so it remains active until the team enables paid gateway access. No claim of a completed Convex gateway cutover is made.
 
 The Drive demo was replaced in place with a 72.8-second 1080p/60fps edit using fresh higher-resolution hosted captures, Deepgram Aura 2 narration, and captions. Public link permissions were retained. Drive playback and the selected 1080p quality were verified; its earlier player setting was 360p. The saved AI briefing shown in this demo was generated through Vercel before any gateway cutover.
+
+September 17, launch update: Activated Convex AI Gateway for the shared Mastra/OpenAI route. Both the provider smoke check and a fresh hosted briefing succeeded. The user's AI/web-development preferences persisted, and saving the Convex All Gas opportunity was verified in the signed-in account. Weekly email remains opt-in.
+
+The one authorized launch email arrived in the recipient's Gmail inbox from the existing RentPilot inbox. This verifies outbound delivery, not a recipient reply round trip or a personalized weekly digest. Added a fixed launch-test idempotency key so checking the same run does not send duplicates.
+
+Replaced the Drive video in place with a 78.43-second narrated, captioned edit showing the current gateway briefing, community source submission, cash evidence, saves, and preferences. Verified the local media streams and full decode; the upload returned the same Drive ID with the new 7,447,994-byte file. Prepared Product Hunt copy and actual-product gallery images for the September 18 Build with Astra challenge. Local build metadata confirms 41 recorded Scout turns used GPT-6 Astra; the deployed recommendation model remains GPT-4.1 mini. No Product Hunt submission receipt exists yet.

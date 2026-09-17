@@ -31,7 +31,7 @@ All Gas and the R Consortium grant have source-specific parsers tied to their ve
 
 ## Accounts and recommendations
 
-Convex Auth protects profiles, saved opportunities, and shortlist history. Mastra memory uses Convex storage through internal-only handlers. The advisor filters recorded opportunities against known constraints, then explains fit, tradeoffs, and next steps. Missing eligibility requirements remain unknown. The hosted advisor uses OpenAI GPT-4.1 mini through Vercel AI Gateway. Its free tier can rate-limit requests; the UI reports this and asks the user to retry. Recommendations do not establish eligibility or guarantee success.
+Convex Auth protects profiles, saved opportunities, and shortlist history. Mastra memory uses Convex storage through internal-only handlers. The advisor filters recorded opportunities against known constraints, then explains fit, tradeoffs, and next steps. Missing eligibility requirements remain unknown. The hosted advisor uses OpenAI GPT-4.1 mini through Convex AI Gateway. Usage is billed to the Convex team and subject to its spending limit; transient provider failures are surfaced in the UI. Recommendations do not establish eligibility or guarantee success.
 
 ## Email setup
 
@@ -74,7 +74,7 @@ Only after that succeeds, activate the route and test a full briefing:
 npx convex env set SCOUT_AI_PROVIDER convex
 ```
 
-An unset provider preserves the existing Vercel/direct-OpenAI selection. An explicitly selected provider never silently falls back to another billing account. Roll back explicitly with `SCOUT_AI_PROVIDER=vercel` while the existing Vercel credential is available. Hosted cutover is pending paid-team access; the demo accurately shows the prior Vercel-generated briefing.
+An unset provider preserves the existing Vercel/direct-OpenAI selection. An explicitly selected provider never silently falls back to another billing account. Roll back explicitly with `SCOUT_AI_PROVIDER=vercel` while the existing Vercel credential is available. The hosted route was activated on September 17 after paid-team access and both explicit-route and default-route connection checks succeeded.
 
 ### Discovery coverage
 
