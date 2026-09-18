@@ -20,6 +20,7 @@ export const record = z.object({
   regionEvidence: z.string().default(""),
   organizerEvidence: z.string().default(""),
   deadline: z.string().nullable(),
+  deadlineDate: z.string().default(""),
   hours: z.number().positive().nullable(),
   solo: z.boolean().nullable(),
   eligibility: z.string(),

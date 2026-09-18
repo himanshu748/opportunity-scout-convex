@@ -39,6 +39,7 @@ export const opportunityFields = {
   cashEvidence: v.optional(v.string()),
   cashVerifiedAt: v.optional(v.number()),
   deadline: v.union(v.number(), v.null()),
+  deadlineDate: v.optional(v.string()),
   hours: v.union(v.number(), v.null()),
   solo: v.union(v.boolean(), v.null()),
   eligibleRegions: v.optional(v.array(v.string())),

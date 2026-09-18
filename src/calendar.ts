@@ -30,6 +30,7 @@ export function opportunityCalendar(item: Opportunity, now = Date.now()) {
   if (
     !isActiveOpportunity(item, now) ||
     !item.deadlineConfirmed ||
+    Boolean(item.deadlineDate) ||
     item.deadline === null
   )
     throw new Error(

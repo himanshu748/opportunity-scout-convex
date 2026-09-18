@@ -56,3 +56,9 @@ describe("deadline calendar", () => {
     ).not.toContain("VALARM");
   });
 });
+
+it("does not export a conservative date-only cutoff as an exact calendar appointment", () => {
+  expect(() =>
+    opportunityCalendar({ ...item, deadlineDate: "2026-09-27" }, now),
+  ).toThrow();
+});

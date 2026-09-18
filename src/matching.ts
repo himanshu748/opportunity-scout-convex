@@ -17,6 +17,7 @@ export type Opportunity = {
   cashEvidence?: string;
   cashVerifiedAt?: number;
   deadline: number | null;
+  deadlineDate?: string;
   hours: number | null;
   solo: boolean | null;
   acceptingSubmissions?: boolean;

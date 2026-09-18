@@ -116,7 +116,11 @@ async function build(
               hoursUntilDeadline: o.deadline
                 ? Math.max(0, Math.floor((o.deadline - Date.now()) / 3600000))
                 : null,
-              deadline: o.deadline ? new Date(o.deadline).toISOString() : null,
+              deadline: o.deadlineDate
+                ? `${o.deadlineDate} (time unspecified)`
+                : o.deadline
+                  ? new Date(o.deadline).toISOString()
+                  : null,
               eligibility: o.eligibility,
               fit: o.fit,
             })),
@@ -205,7 +209,7 @@ async function build(
       picks
         .map(
           (p, i) =>
-            `### ${i + 1}. [${p.source.title}](${p.source.url})\n\n**Deadline:** ${p.source.deadline ? new Date(p.source.deadline).toUTCString() : "Not confirmed"}\n\n**Listed rewards:** ${p.source.reward}\n\n**Confirmed cash pool:** ${cashLabel(p.source)}\n\n**Why consider it:** ${p.why}\n\n**Tradeoff:** ${p.tradeoff}\n\n**Check first:** ${p.source.eligibility} ${p.source.fit.unknowns.join(". ")}.\n\n**Next step:** ${p.nextStep}\n\n**Suggested plan:**\n${p.plan.map((step) => `- ${step}`).join("\n")}`,
+            `### ${i + 1}. [${p.source.title}](${p.source.url})\n\n**Deadline:** ${p.source.deadlineDate ? `${p.source.deadlineDate} (time unspecified)` : p.source.deadline ? new Date(p.source.deadline).toUTCString() : "Not confirmed"}\n\n**Listed rewards:** ${p.source.reward}\n\n**Confirmed cash pool:** ${cashLabel(p.source)}\n\n**Why consider it:** ${p.why}\n\n**Tradeoff:** ${p.tradeoff}\n\n**Check first:** ${p.source.eligibility} ${p.source.fit.unknowns.join(". ")}.\n\n**Next step:** ${p.nextStep}\n\n**Suggested plan:**\n${p.plan.map((step) => `- ${step}`).join("\n")}`,
         )
         .join("\n\n")
     : "No verified active opportunities match that request right now. Try broadening your preferences or check back after the next source refresh.";

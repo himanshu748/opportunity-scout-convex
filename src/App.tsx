@@ -14,6 +14,7 @@ import {
 import { useAuthActions } from "@convex-dev/auth/react";
 import {
   Compass,
+  Sparkles,
   CalendarPlus,
   LayoutList,
   Bookmark,
@@ -342,6 +343,7 @@ export function Shell({
   }
   const nav = [
     { id: "board" as View, label: "Discover", icon: LayoutList },
+    { id: "advisor" as View, label: "AI briefing", icon: Sparkles },
     { id: "saved" as View, label: "Saved opportunities", icon: Bookmark },
     { id: "digest" as View, label: "Weekly digest", icon: Mail },
     { id: "profile" as View, label: "Preferences", icon: SlidersHorizontal },
@@ -438,41 +440,15 @@ export function Shell({
           )}
           {(view === "board" || view === "saved") && (
             <>
-              <div className="page-heading">
-                <div>
-                  <h1>
-                    {view === "board" ? "Opportunities" : "Saved opportunities"}
-                  </h1>
-                  <p>
-                    {view === "board"
-                      ? "Hackathons, grants and paid gigs. Refreshed daily."
-                      : "Your active saved picks."}
-                  </p>
-                </div>
-                <button
-                  className="primary"
-                  onClick={() => {
-                    setView("advisor");
-                    setPrompt(
-                      "Give me my daily briefing: choose up to three opportunities worth my time, explain eligibility uncertainties, deadlines, confirmed cash versus other rewards, and a concrete build or application plan for each.",
-                    );
-                  }}
-                >
-                  My daily briefing <ArrowUpRight size={16} />
-                </button>
-              </div>
-              <div className="profile-strip">
-                <span className="profile-symbol">
-                  <SlidersHorizontal size={16} />
-                </span>
+              <div className="board-summary">
                 <p>
-                  {model.profile
-                    ? `${profile.skills.join(", ")} · ${profile.hours} hours a week`
-                    : "Add your skills and available time."}
+                  {view === "saved"
+                    ? "Your active saved picks."
+                    : "Hackathons, grants and paid gigs · refreshed daily"}
                 </p>
                 <button className="text-button" onClick={activeProfile}>
-                  {model.profile ? "Edit profile" : "Set your preferences"}{" "}
-                  <ArrowRight size={16} />
+                  {model.profile ? "Edit preferences" : "Set preferences"}{" "}
+                  <SlidersHorizontal size={16} />
                 </button>
               </div>
               <section className="board" aria-label="Opportunity catalog">
@@ -722,7 +698,11 @@ export function Shell({
                                   className={`deadline-countdown ${o.deadline - now < 86400000 ? "deadline-urgent" : ""}`}
                                 >
                                   <Clock size={16} />
-                                  {deadlineLabel(o.deadline, now)}
+                                  {deadlineLabel(
+                                    o.deadline,
+                                    now,
+                                    o.deadlineDate,
+                                  )}
                                 </span>
                               )}
                               <span className="row-reward">
@@ -803,18 +783,28 @@ export function Shell({
                       <div className="verified-status">
                         <span className="status-dot" />
                         Active ·{" "}
-                        {item.deadlineConfirmed
-                          ? "deadline confirmed"
-                          : "source checked"}
+                        {item.deadlineDate
+                          ? "closing date confirmed · time unspecified"
+                          : item.deadlineConfirmed
+                            ? "deadline confirmed"
+                            : "source checked"}
                       </div>
                       {item.deadline !== null && (
                         <div
                           className={`detail-countdown ${item.deadline - now < 86400000 ? "deadline-urgent" : ""}`}
                         >
                           <Clock size={16} />
-                          <strong>{deadlineLabel(item.deadline, now)}</strong>
+                          <strong>
+                            {deadlineLabel(
+                              item.deadline,
+                              now,
+                              item.deadlineDate,
+                            )}
+                          </strong>
                           <small>
-                            Automatically leaves the board when time runs out.
+                            {item.deadlineDate
+                              ? "Exact closing time is unavailable. Hidden before the closing date begins to avoid showing an expired opportunity."
+                              : "Automatically leaves the board when time runs out."}
                           </small>
                         </div>
                       )}
@@ -839,19 +829,21 @@ export function Shell({
                         <div>
                           <dt>Deadline</dt>
                           <dd>
-                            {item.deadline
-                              ? new Date(item.deadline).toLocaleDateString(
-                                  undefined,
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                    timeZone: "UTC",
-                                    timeZoneName: "short",
-                                  },
-                                )
-                              : "Not confirmed"}
+                            {item.deadlineDate
+                              ? `${item.deadlineDate} · exact time unspecified`
+                              : item.deadline
+                                ? new Date(item.deadline).toLocaleDateString(
+                                    undefined,
+                                    {
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                      timeZone: "UTC",
+                                      timeZoneName: "short",
+                                    },
+                                  )
+                                : "Not confirmed"}
                           </dd>
                         </div>
                         <div>
@@ -906,26 +898,28 @@ export function Shell({
                           ? "Remove from saved"
                           : "Save for later"}
                       </button>
-                      {item.deadlineConfirmed && item.deadline !== null && (
-                        <button
-                          className="secondary full"
-                          onClick={() => {
-                            try {
-                              downloadDeadline(item);
-                              setNotice(
-                                "Calendar file downloaded. Open it in your calendar to add the deadline.",
-                              );
-                            } catch {
-                              setError(
-                                "This deadline is no longer available. Refresh the board and try again.",
-                              );
-                            }
-                          }}
-                        >
-                          <CalendarPlus size={16} />
-                          Add deadline to calendar
-                        </button>
-                      )}
+                      {!item.deadlineDate &&
+                        item.deadlineConfirmed &&
+                        item.deadline !== null && (
+                          <button
+                            className="secondary full"
+                            onClick={() => {
+                              try {
+                                downloadDeadline(item);
+                                setNotice(
+                                  "Calendar file downloaded. Open it in your calendar to add the deadline.",
+                                );
+                              } catch {
+                                setError(
+                                  "This deadline is no longer available. Refresh the board and try again.",
+                                );
+                              }
+                            }}
+                          >
+                            <CalendarPlus size={16} />
+                            Add deadline to calendar
+                          </button>
+                        )}
                     </>
                   ) : (
                     <div className="empty">
@@ -1092,7 +1086,7 @@ export function Shell({
             <section className="advisor-page">
               <div className="page-heading">
                 <div>
-                  <h1>A little help choosing.</h1>
+                  <h1>Your AI briefing</h1>
                   <p>Your goals, a few good options, and a clear next step.</p>
                 </div>
               </div>

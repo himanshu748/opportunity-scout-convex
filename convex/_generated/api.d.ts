@@ -12,6 +12,7 @@ import type * as advisor from "../advisor.js";
 import type * as auth from "../auth.js";
 import type * as board from "../board.js";
 import type * as crons from "../crons.js";
+import type * as devfolio from "../devfolio.js";
 import type * as directorySources from "../directorySources.js";
 import type * as discovery from "../discovery.js";
 import type * as email from "../email.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   board: typeof board;
   crons: typeof crons;
+  devfolio: typeof devfolio;
   directorySources: typeof directorySources;
   discovery: typeof discovery;
   email: typeof email;

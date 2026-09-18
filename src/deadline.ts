@@ -1,4 +1,9 @@
-export function deadlineLabel(deadline: number | null, now: number) {
+export function deadlineLabel(
+  deadline: number | null,
+  now: number,
+  dateOnly?: string,
+) {
+  if (dateOnly) return `Closes ${dateOnly} · time unspecified`;
   if (deadline === null) return "Deadline not confirmed";
   const seconds = Math.max(0, Math.ceil((deadline - now) / 1000));
   if (!seconds) return "Deadline reached";

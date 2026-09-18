@@ -124,6 +124,7 @@ export const upsert = internalMutation({
       .unique();
     const fields = {
       ...args,
+      deadlineDate: args.deadlineDate,
       ...sortKeys(args),
       cashAmount: args.cashAmount,
       cashCurrency: args.cashCurrency,
