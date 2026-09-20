@@ -36,12 +36,16 @@ export function listedPrizeUSD(reward: string): number | null {
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 type CashFacts = {
+  cashStatus?: string;
+  cashCurrency?: string;
   cashAmountUSD?: number;
   cashEvidence?: string;
   cashVerifiedAt?: number;
 };
 export function confirmedCashUSD(item: CashFacts): number | null {
   if (
+    (item.cashStatus !== undefined && item.cashStatus !== "confirmed") ||
+    (item.cashCurrency !== undefined && item.cashCurrency !== "USD") ||
     !item.cashVerifiedAt ||
     !item.cashEvidence ||
     !item.cashAmountUSD ||

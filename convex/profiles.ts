@@ -1,3 +1,5 @@
+import { validateDecision } from "./decision";
+import { cancelPending } from "./email";
 import { isActiveOpportunity } from "../src/availability";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
@@ -15,6 +17,7 @@ export const profileFields = {
   solo: v.boolean(),
   goal: v.union(v.literal("learn"), v.literal("earn"), v.literal("portfolio")),
   email: v.string(),
+  consentVersion: v.optional(v.number()),
   digestEnabled: v.boolean(),
   nextDigestAt: v.number(),
   threadId: v.optional(v.string()),
@@ -70,11 +73,15 @@ export const save = mutation({
       .unique();
     const fields = {
       ...args,
+      consentVersion:
+        (existing?.consentVersion ?? 0) +
+        (existing?.digestEnabled !== args.digestEnabled ? 1 : 0),
       skills: [...new Set(args.skills.map((s) => s.trim()).filter(Boolean))],
       userId,
       email: user.email.toLowerCase(),
       nextDigestAt: existing?.nextDigestAt ?? Date.now() + 7 * 86400000,
     };
+    if (!args.digestEnabled) await cancelPending(ctx, userId);
     if (existing) await ctx.db.patch(existing._id, fields);
     else await ctx.db.insert("profiles", fields);
     return null;
@@ -115,6 +122,13 @@ export const latest = query({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .order("desc")
       .first();
+    if (
+      row &&
+      (!row.checks ||
+        !row.profileKey ||
+        !(await validateDecision(ctx, userId, row.checks, row.profileKey)))
+    )
+      return null;
     if (row) {
       for (const id of row.opportunityIds.slice(0, 3)) {
         const opportunity = await ctx.db.get(id);

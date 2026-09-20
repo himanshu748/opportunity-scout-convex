@@ -2,7 +2,7 @@
 
 ## What it does
 
-Scout helps students and independent builders choose active hackathons, developer grants, and small paid gigs. It finds opportunities beyond a single board, keeps source evidence and confirmed deadlines, and builds a personal shortlist with reasons, tradeoffs, and a next step.
+Scout now specializes in helping students and independent builders choose active hackathons. It finds opportunities beyond a single board, keeps source evidence and confirmed deadlines, and builds a personal shortlist with reasons, tradeoffs, and a next step.
 
 ## Stack with a job to do
 
@@ -25,7 +25,7 @@ Added direct links to a selected opportunity, Preferences, and digest setup. Add
 
 Validation: production build and 33 tests pass. Desktop/mobile checks found no horizontal overflow; images loaded, keyboard tabs worked, Preferences deep link opened correctly, and the calendar action reported a download. Workspace controls remain 4px vertical / 8px horizontal padding with 16px icons. Public primary links use 16px / 24px padding.
 
-## Submission status — not yet complete
+## Submission status — verified September 20; earlier failures retained below
 
 - Public app URL: https://graceful-spoonbill-850.convex.site (hosted development deployment).
 - Public repository: https://github.com/himanshu748/opportunity-scout-convex
@@ -34,7 +34,7 @@ Validation: production build and 33 tests pass. Desktop/mobile checks found no h
 - Real email reply round trip: still requires verification.
 - Convex account: Starter and AI Gateway enabled on September 17. The team monthly disable threshold is $5; earlier usage remains billed against the team's limits.
 - Astra/Product Hunt: [launch](https://www.producthunt.com/products/opportunity-scout?launch=opportunity-scout) successfully scheduled for September 18, 2026 at 12:01 AM Pacific (12:31 PM IST), with the GPT-6 Astra challenge selected. See the [launch package](launch/product-hunt.md).
-- All Gas submission: VibeApps returned a server error on three completed submission attempts. No All Gas submission receipt exists yet.
+- All Gas submission: [Opportunity Scout is publicly listed on VibeApps](https://vibeapps.dev/s/opportunity-scout), tagged AllGasHackathon. Its changelog says originally submitted September 17, 2026 at 16:08. Verified in the signed-in browser on September 20. Earlier server errors below remain historical. Public listing/tagging is not proof of a judging outcome.
 
 Official requirements: https://www.convex.dev/hackathons/all-gas
 
@@ -91,3 +91,17 @@ Saved profiles now default the board to Best match for me, with skill-match reas
 - Live catalog after checks: 69 hackathons, one grant and one gig. Includes AI for Foundational Learning on Hack2Skill (September 27 date-only deadline, INR 1,000,000 cash awards). No stale records in the queried catalog.
 - Refined dashboard hierarchy: pale blue navigation, warm neutral workspace, reduced header spacing, inline search, fewer introductory elements and an AI briefing navigation tab.
 - DoraHacks direct request returned HTTP 405; no new direct integration is claimed. Browser visual verification was blocked by the test-browser environment, so responsive visual QA remains unverified.
+
+### September 20: local reliability review, awaiting deployment approval
+
+Verified the clean checkout and GitHub revision `8731fc8f99facca5f36267d12d71e9df6f69d720` before changes. Preserved URL normalization, deterministic deadline evidence, cash-versus-credit parsing, Mastra and the Convex AI Gateway route. The standalone launch receipt remains `sent`; it does not establish a personalized weekly digest or reply round trip.
+
+The local update adds conservative cross-source identity, reversible canonical pointers, retained field observations, visible source disagreements, bounded generation/reply recovery, send-time consent/evidence guards, and provider idempotency. The main product now specializes in hackathons. The current public submission still promises broader categories; its correction is drafted locally and has not been published.
+
+The real email loop, deployed migration and fresh hosted UI remain release gates. No billing settings or shared inbox/webhooks changed. See [exact verification evidence](docs/reliability-review.md). Earlier test counts and deployment statements in this chronological log refer to earlier revisions.
+
+### September 20: approved hosted release and email verification
+
+Deployed the reliability update and formatted HTML/plain-text digests and replies. All 107 tests pass across 22 files; the build and hosted mobile checks pass. The existing Convex AI Gateway returned `connected`. A normal personalized digest reached the explicitly authorized owner’s Gmail account. A fresh reply was processed by Scout’s repaired private poller and produced a two-option refined response in the same thread. Re-polling produced no duplicate response. STOP restored the account to unsubscribed.
+
+Updated the existing VibeApps submission and verified the saved hackathon-focused copy, live test boundaries, legal submitter name and retained project/social/video links. The video remains the earlier walkthrough, explicitly described as such. See [release evidence](docs/reliability-review.md) for exact outcomes, the initial polling failure and its repair, usage bounds and remaining limitations. This controlled test is not independent user feedback. No billing, shared inbox or webhook settings changed.

@@ -9,7 +9,28 @@ import {
   mastraDocumentsTable,
 } from "@mastra/convex/schema";
 import { authTables } from "@convex-dev/auth/server";
+export const identityValidator = v.object({
+  organizer: v.string(),
+  edition: v.string(),
+  strongId: v.string(),
+  evidence: v.string(),
+  sourceUrl: v.string(),
+});
+export const fieldEvidenceValidator = v.object({
+  field: v.string(),
+  value: v.string(),
+  quote: v.string(),
+  sourceUrl: v.string(),
+  checkedAt: v.number(),
+});
 export const opportunityFields = {
+  identity: v.optional(identityValidator),
+  identityReviewHold: v.optional(v.boolean()),
+  eventKey: v.optional(v.string()),
+  canonicalId: v.optional(v.id("opportunities")),
+  conflicts: v.optional(v.array(v.string())),
+  sourceAliases: v.optional(v.array(v.string())),
+  fieldEvidence: v.optional(v.array(fieldEvidenceValidator)),
   sortEndSoon: v.optional(v.number()),
   sortEndLast: v.optional(v.number()),
   sortPrize: v.optional(v.number()),
@@ -57,6 +78,23 @@ export const opportunityFields = {
 };
 export default defineSchema({
   ...authTables,
+  emailWorker: defineTable({
+    name: v.string(),
+    cursor: v.union(v.string(), v.null()),
+  }).index("by_name", ["name"]),
+  sourceObservations: defineTable({
+    opportunityId: v.id("opportunities"),
+    facts: v.array(fieldEvidenceValidator),
+    observedAt: v.number(),
+  }).index("by_opportunityId", ["opportunityId"]),
+  identityChanges: defineTable({
+    opportunityId: v.id("opportunities"),
+    previousCanonicalId: v.optional(v.id("opportunities")),
+    canonicalId: v.id("opportunities"),
+    reason: v.string(),
+    createdAt: v.number(),
+    revertedAt: v.optional(v.number()),
+  }),
   sourceSubmissions: defineTable({
     userId: v.id("users"),
     url: v.string(),
@@ -114,6 +152,8 @@ export default defineSchema({
     .index("by_validUntil", ["validUntil"])
     .index("by_kind_and_validUntil", ["kind", "validUntil"])
     .index("by_url", ["url"])
+    .index("by_eventKey", ["eventKey"])
+    .index("by_canonicalId", ["canonicalId"])
     .searchIndex("search_catalog", {
       searchField: "searchText",
       filterFields: ["status", "kind"],
@@ -134,6 +174,7 @@ export default defineSchema({
       v.literal("portfolio"),
     ),
     email: v.string(),
+    consentVersion: v.optional(v.number()),
     digestEnabled: v.boolean(),
     nextDigestAt: v.number(),
     threadId: v.optional(v.string()),
@@ -151,6 +192,10 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_userId_and_opportunityId", ["userId", "opportunityId"]),
   shortlists: defineTable({
+    checks: v.optional(
+      v.array(v.object({ id: v.id("opportunities"), fingerprint: v.string() })),
+    ),
+    profileKey: v.optional(v.string()),
     userId: v.id("users"),
     body: v.string(),
     opportunityIds: v.array(v.id("opportunities")),
@@ -173,13 +218,49 @@ export default defineSchema({
     period: v.string(),
     status: v.union(
       v.literal("queued"),
+      v.literal("composing"),
+      v.literal("retryable"),
+      v.literal("cancelled"),
       v.literal("sent"),
       v.literal("failed"),
     ),
+    attempts: v.optional(v.number()),
+    retryAt: v.optional(v.number()),
+    leaseUntil: v.optional(v.number()),
+    periodEnd: v.optional(v.number()),
+    body: v.optional(v.string()),
+    checks: v.optional(
+      v.array(v.object({ id: v.id("opportunities"), fingerprint: v.string() })),
+    ),
+    profileKey: v.optional(v.string()),
     outboundId: v.optional(v.string()),
     message: v.optional(v.string()),
-  }).index("by_userId_and_period", ["userId", "period"]),
-  replyEvents: defineTable({ messageId: v.string() }).index("by_messageId", [
-    "messageId",
-  ]),
+  })
+    .index("by_userId_and_period", ["userId", "period"])
+    .index("by_retryAt", ["retryAt"])
+    .index("by_outboundId", ["outboundId"]),
+  replyEvents: defineTable({
+    messageId: v.string(),
+    userId: v.optional(v.id("users")),
+    inboxId: v.optional(v.string()),
+    threadId: v.optional(v.string()),
+    sender: v.optional(v.string()),
+    text: v.optional(v.string()),
+    status: v.optional(v.string()),
+    attempts: v.optional(v.number()),
+    retryAt: v.optional(v.number()),
+    leaseUntil: v.optional(v.number()),
+    periodEnd: v.optional(v.number()),
+    outboundId: v.optional(v.string()),
+    message: v.optional(v.string()),
+    body: v.optional(v.string()),
+    checks: v.optional(
+      v.array(v.object({ id: v.id("opportunities"), fingerprint: v.string() })),
+    ),
+    profileKey: v.optional(v.string()),
+  })
+    .index("by_messageId", ["messageId"])
+    .index("by_retryAt", ["retryAt"])
+    .index("by_userId", ["userId"])
+    .index("by_outboundId", ["outboundId"]),
 });

@@ -4,3 +4,6 @@ dist/
 !.env.example
 .convex/
 *.tsbuildinfo
+
+output/
+local-marketing/

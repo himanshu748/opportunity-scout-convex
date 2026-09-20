@@ -55,7 +55,7 @@ const initialProfile: Profile = {
   goal: "portfolio",
 };
 type View = "board" | "saved" | "digest" | "profile" | "advisor";
-type Model = {
+export type Model = {
   list: Opportunity[] | undefined;
   savedList?: Opportunity[];
   filter?: (
@@ -67,6 +67,13 @@ type Model = {
   saved: string[];
   profile: Profile | null;
   email: string;
+  delivery?: {
+    status: string;
+    message: string;
+    attempts: number;
+    period: string;
+  } | null;
+  replyState?: { status: string; message: string; attempts: number } | null;
   digestEnabled: boolean;
   latest: { body: string; createdAt: number; request: string } | null;
   authenticated: boolean;
@@ -91,7 +98,7 @@ function Connected() {
       asOf: catalogAsOf,
       search: filters.search,
       sort: filters.sort,
-      kind: filters.kind === "all" ? undefined : filters.kind,
+      kind: "hackathon",
     },
     { initialNumItems: 50 },
   );
@@ -100,6 +107,8 @@ function Connected() {
   const saved = useQuery(api.board.savedData, {}),
     profile = useQuery(api.profiles.mine, {}),
     latest = useQuery(api.profiles.latest, {}),
+    delivery = useQuery(api.email.myDelivery, {}),
+    replyState = useQuery(api.email.myReply, {}),
     status = useQuery(api.system.status, {});
   const submitSource = useMutation(api.discovery.submitSource);
   const toggle = useMutation(api.board.toggleSave),
@@ -132,6 +141,8 @@ function Connected() {
         profile: profile ?? null,
         email: profile?.email ?? "",
         digestEnabled: profile?.digestEnabled ?? false,
+        delivery,
+        replyState,
         latest: latest ?? null,
         authenticated: isAuthenticated,
         status,
@@ -193,7 +204,9 @@ export function Shell({
         ? requested
         : "board";
     }),
-    [kind, setKind] = useState<"all" | "hackathon" | "gig" | "grant">("all"),
+    [kind, setKind] = useState<"all" | "hackathon" | "gig" | "grant">(
+      "hackathon",
+    ),
     [sourceUrl, setSourceUrl] = useState(""),
     [submittingSource, setSubmittingSource] = useState(false),
     [search, setSearch] = useState(""),
@@ -444,7 +457,7 @@ export function Shell({
                 <p>
                   {view === "saved"
                     ? "Your active saved picks."
-                    : "Hackathons, grants and paid gigs · refreshed daily"}
+                    : "Hackathons · source checks expire after 48 hours"}
                 </p>
                 <button className="text-button" onClick={activeProfile}>
                   {model.profile ? "Edit preferences" : "Set preferences"}{" "}
@@ -459,24 +472,26 @@ export function Shell({
                       role="group"
                       aria-label="Opportunity type"
                     >
-                      {(["all", "hackathon", "gig", "grant"] as const).map(
-                        (k) => (
-                          <button
-                            key={k}
-                            aria-pressed={kind === k}
-                            className={kind === k ? "selected" : ""}
-                            onClick={() => setKind(k)}
-                          >
-                            {k === "all"
-                              ? "All opportunities"
-                              : k === "hackathon"
-                                ? "Hackathons"
-                                : k === "grant"
-                                  ? "Grants"
-                                  : "Gigs"}
-                          </button>
-                        ),
-                      )}
+                      {(
+                        ["hackathon"] as (
+                          "all" | "hackathon" | "gig" | "grant"
+                        )[]
+                      ).map((k) => (
+                        <button
+                          key={k}
+                          aria-pressed={kind === k}
+                          className={kind === k ? "selected" : ""}
+                          onClick={() => setKind(k)}
+                        >
+                          {k === "all"
+                            ? "All opportunities"
+                            : k === "hackathon"
+                              ? "Hackathons"
+                              : k === "grant"
+                                ? "Grants"
+                                : "Gigs"}
+                        </button>
+                      ))}
                     </div>
                     <details className="suggest-source">
                       <summary>Missing an opportunity?</summary>
@@ -698,11 +713,13 @@ export function Shell({
                                   className={`deadline-countdown ${o.deadline - now < 86400000 ? "deadline-urgent" : ""}`}
                                 >
                                   <Clock size={16} />
-                                  {deadlineLabel(
-                                    o.deadline,
-                                    now,
-                                    o.deadlineDate,
-                                  )}
+                                  {o.conflicts?.includes("deadline")
+                                    ? "Deadline disputed"
+                                    : deadlineLabel(
+                                        o.deadline,
+                                        now,
+                                        o.deadlineDate,
+                                      )}
                                 </span>
                               )}
                               <span className="row-reward">
@@ -782,32 +799,36 @@ export function Shell({
                       <p className="detail-org">By {item.organization}</p>
                       <div className="verified-status">
                         <span className="status-dot" />
-                        Active ·{" "}
-                        {item.deadlineDate
-                          ? "closing date confirmed · time unspecified"
-                          : item.deadlineConfirmed
-                            ? "deadline confirmed"
-                            : "source checked"}
+                        {item.conflicts?.length
+                          ? "Sources disagree · review required"
+                          : "Active · "}
+                        {!item.conflicts?.length &&
+                          (item.deadlineDate
+                            ? "closing date confirmed · time unspecified"
+                            : item.deadlineConfirmed
+                              ? "deadline confirmed"
+                              : "source checked")}
                       </div>
-                      {item.deadline !== null && (
-                        <div
-                          className={`detail-countdown ${item.deadline - now < 86400000 ? "deadline-urgent" : ""}`}
-                        >
-                          <Clock size={16} />
-                          <strong>
-                            {deadlineLabel(
-                              item.deadline,
-                              now,
-                              item.deadlineDate,
-                            )}
-                          </strong>
-                          <small>
-                            {item.deadlineDate
-                              ? "Exact closing time is unavailable. Hidden before the closing date begins to avoid showing an expired opportunity."
-                              : "Automatically leaves the board when time runs out."}
-                          </small>
-                        </div>
-                      )}
+                      {item.deadline !== null &&
+                        !item.conflicts?.includes("deadline") && (
+                          <div
+                            className={`detail-countdown ${item.deadline - now < 86400000 ? "deadline-urgent" : ""}`}
+                          >
+                            <Clock size={16} />
+                            <strong>
+                              {deadlineLabel(
+                                item.deadline,
+                                now,
+                                item.deadlineDate,
+                              )}
+                            </strong>
+                            <small>
+                              {item.deadlineDate
+                                ? "Exact closing time is unavailable. Hidden before the closing date begins to avoid showing an expired opportunity."
+                                : "Automatically leaves the board when time runs out."}
+                            </small>
+                          </div>
+                        )}
                       <p className="description">{item.description}</p>
                       <dl>
                         <div>
@@ -859,6 +880,37 @@ export function Shell({
                       </dl>
                       <section className="evidence">
                         <h3>Before you commit</h3>
+                        {!!item.conflicts?.length && (
+                          <p role="status">
+                            Sources disagree on {item.conflicts.join(", ")}.
+                            Scout will not recommend this event until those
+                            conflicts are resolved.
+                          </p>
+                        )}
+                        {!!item.sourceAliases?.length && (
+                          <details>
+                            <summary>
+                              {item.sourceAliases.length} linked source records
+                            </summary>
+                            {item.fieldEvidence?.map((fact, i) => (
+                              <p key={i}>
+                                <strong>{fact.field}:</strong> {fact.value}
+                                <br />
+                                <a
+                                  href={fact.sourceUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  Source
+                                </a>{" "}
+                                ·{" "}
+                                {new Date(fact.checkedAt).toLocaleDateString()}
+                                <br />
+                                {fact.quote}
+                              </p>
+                            ))}
+                          </details>
+                        )}
                         <p>{item.eligibility}</p>
                         {item.evidence && (
                           <blockquote>{item.evidence}</blockquote>
@@ -898,7 +950,8 @@ export function Shell({
                           ? "Remove from saved"
                           : "Save for later"}
                       </button>
-                      {!item.deadlineDate &&
+                      {!item.conflicts?.includes("deadline") &&
+                        !item.deadlineDate &&
                         item.deadlineConfirmed &&
                         item.deadline !== null && (
                           <button
@@ -1100,9 +1153,9 @@ export function Shell({
                 <div className="suggestions">
                   {[
                     "Compare my best options and explain what I should skip.",
-                    "Find grants I may qualify for in my location.",
+                    "Which hackathons explicitly allow my location?",
                     "Give me a weekend build plan for the best matching hackathon.",
-                    "Show me small paid React gigs.",
+                    "Which cash prizes are verified, and which include credits?",
                   ].map((s) => (
                     <button key={s} onClick={() => setPrompt(s)}>
                       {s}
@@ -1156,8 +1209,10 @@ export function Shell({
                 </button>
               </form>
               <p className="fine-print">
-                Recommendations are based on recorded sources. Check eligibility
-                and deadlines before applying.
+                Scout checks up to 250 active hackathon records beyond the
+                loaded page, considers the best 25 eligible matches, and
+                revalidates the selected facts before delivery. Check
+                eligibility and deadlines before applying.
               </p>
             </section>
           )}
@@ -1165,13 +1220,33 @@ export function Shell({
             <section className="digest-page">
               <div className="page-heading">
                 <div>
-                  <h1>Your week, with direction.</h1>
-                  <p>A few useful opportunities. Delivered to your inbox.</p>
+                  <h1>Weekly digest</h1>
+                  <p>Your picks, delivery status, and reply preferences.</p>
                 </div>
                 <button className="secondary" onClick={activeProfile}>
                   Email preferences <SlidersHorizontal size={16} />
                 </button>
               </div>
+              {model.delivery && (
+                <div className="delivery-receipt" role="status">
+                  <strong>Latest delivery: {model.delivery.status}</strong>
+                  <p>
+                    {model.delivery.message || "Delivery is being prepared."}
+                  </p>
+                  <small>
+                    Generation attempts: {model.delivery.attempts} / 3
+                  </small>
+                </div>
+              )}
+              {model.replyState && (
+                <div className="delivery-receipt" role="status">
+                  <strong>Latest reply: {model.replyState.status}</strong>
+                  <p>{model.replyState.message || "Reply processing status"}</p>
+                  <small>
+                    Generation attempts: {model.replyState.attempts} / 3
+                  </small>
+                </div>
+              )}
               <div className="digest-layout">
                 <div className="letter">
                   <div className="letter-brand">
@@ -1181,15 +1256,7 @@ export function Shell({
                   <span className="letter-status">
                     {model.latest ? "Your latest shortlist" : "Digest preview"}
                   </span>
-                  <h2>
-                    A few things
-                    <br />
-                    worth your time.
-                  </h2>
-                  <p>
-                    Each week, Scout checks your preferences against current
-                    opportunities and explains which ones deserve a closer look.
-                  </p>
+                  <h2>Your latest picks</h2>
                   {model.latest ? (
                     <div className="markdown">
                       <Markdown skipHtml>{model.latest.body}</Markdown>
@@ -1218,11 +1285,7 @@ export function Shell({
                   </div>
                 </div>
                 <div className="digest-settings">
-                  <h2>
-                    Less searching.
-                    <br />
-                    More doing.
-                  </h2>
+                  <h2>Delivery and replies</h2>
                   <p>
                     Get a shortlist built around your skills, time, and what you
                     want to do next.

@@ -7,9 +7,13 @@ export type PrizeFacts = {
   cashVerifiedAt?: number;
 };
 export function cashLabel(item: PrizeFacts): string {
+  if (item.cashStatus === "ambiguous")
+    return "Cash unclear · mixed reward details";
   if (item.cashStatus === "nonCash") return "No cash · non-cash rewards";
+  if (item.cashStatus === "unpublished")
+    return "Cash amount not published / verified";
   const amount = item.cashAmount ?? item.cashAmountUSD;
-  const currency = item.cashCurrency ?? "USD";
+  const currency = item.cashCurrency ?? (item.cashAmountUSD ? "USD" : "$");
   if (
     amount !== undefined &&
     amount > 0 &&
@@ -23,9 +27,7 @@ export function cashLabel(item: PrizeFacts): string {
       ? `$${value} cash pool · currency unspecified`
       : `${currency} ${value} confirmed cash pool`;
   }
-  return item.cashStatus === "ambiguous"
-    ? "Cash unclear · mixed reward details"
-    : "Cash amount not published / verified";
+  return "Cash amount not published / verified";
 }
 function plain(html: string) {
   return html

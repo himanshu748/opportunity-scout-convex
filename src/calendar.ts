@@ -28,6 +28,7 @@ function fold(line: string) {
 }
 export function opportunityCalendar(item: Opportunity, now = Date.now()) {
   if (
+    !!item.conflicts?.includes("deadline") ||
     !isActiveOpportunity(item, now) ||
     !item.deadlineConfirmed ||
     Boolean(item.deadlineDate) ||

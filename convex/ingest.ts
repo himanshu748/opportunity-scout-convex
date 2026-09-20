@@ -1,4 +1,5 @@
 "use node";
+import { extractIdentity } from "../src/eventIdentity";
 import { hack2skillOpportunity } from "../src/hack2skillSource";
 import { dateOnlyDeadline } from "../src/dateOnlyDeadline";
 import { verifiesDeadline } from "../src/deadlineEvidence";
@@ -111,7 +112,13 @@ export const checkNext = internalAction({
             allGasSource(source.url, text, Date.now()) ??
             rConsortiumSource(source.url, text, Date.now());
           if (known) {
-            await ctx.runMutation(internal.board.upsert, known);
+            await ctx.runMutation(internal.board.upsert, {
+              ...known,
+              identity: extractIdentity(
+                known,
+                typeof html === "string" ? html : "",
+              ),
+            });
             await ctx.runMutation(internal.discovery.complete, {
               id: source._id,
               result: "active",
@@ -147,7 +154,10 @@ export const checkNext = internalAction({
         allGasSource(source.url, page.markdown, Date.now()) ??
         rConsortiumSource(source.url, page.markdown, Date.now());
       if (known) {
-        await ctx.runMutation(internal.board.upsert, known);
+        await ctx.runMutation(internal.board.upsert, {
+          ...known,
+          identity: extractIdentity(known, page.markdown),
+        });
         await ctx.runMutation(internal.discovery.complete, {
           id: source._id,
           result: "active",
@@ -235,6 +245,10 @@ export const checkNext = internalAction({
       const cashAmount = verifyCashEvidence(cashEvidence, page.markdown);
       await ctx.runMutation(internal.board.upsert, {
         ...fields,
+        identity: extractIdentity(
+          { ...fields, url: source.url },
+          page.markdown,
+        ),
         organizerEvidence,
         ...(regionEvidence.length > 8 && page.markdown.includes(regionEvidence)
           ? { eligibleRegions, excludedRegions, regionEvidence }

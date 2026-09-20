@@ -1888,3 +1888,14 @@ button svg {
     width: 100%;
   }
 }
+
+.delivery-receipt {
+  border: 1px solid #b6b8b2;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  overflow-wrap: anywhere;
+}
+.evidence details p {
+  overflow-wrap: anywhere;
+}

@@ -1,4 +1,58 @@
+diff --git a/node_modules/@agentmail/convex/dist/component/convex.config.js b/node_modules/@agentmail/convex/dist/component/convex.config.js
+index 3d15ed6..30bb8cb 100644
+--- a/node_modules/@agentmail/convex/dist/component/convex.config.js
++++ b/node_modules/@agentmail/convex/dist/component/convex.config.js
+@@ -1,6 +1,7 @@
++import { v } from "convex/values";
+ import { defineComponent } from "convex/server";
+ import workpool from "@convex-dev/workpool/convex.config";
+-const component = defineComponent("agentmail");
++const component = defineComponent("agentmail", { env: { AGENTMAIL_API_KEY: v.string(), AGENTMAIL_BASE_URL: v.optional(v.string()) } });
+ component.use(workpool, { name: "sendPool" });
+ component.use(workpool, { name: "callbackPool" });
+ export default component;
+diff --git a/node_modules/@agentmail/convex/dist/component/lib.js b/node_modules/@agentmail/convex/dist/component/lib.js
+index c245802..0a38513 100644
+--- a/node_modules/@agentmail/convex/dist/component/lib.js
++++ b/node_modules/@agentmail/convex/dist/component/lib.js
+@@ -186,8 +186,9 @@ export const getOutboundForSend = internalQuery({
+         if (!row)
+             return null;
+         // cancelSend or markSendFailed already finalized this row — bail.
+-        if (row.status === "failed")
+-            return null;
++        if (row.status !== "pending" || Date.now() - row._creationTime > 23 * 3600000) return null;
++        const guard = row.payload.headers?.["X-Scout-Guard"];
++        if (guard && !await ctx.runQuery(guard, {outboundId:args.outboundId})) return null;
+         return row;
+     },
+ });
+@@ -204,7 +205,8 @@ export const performSend = internalAction({
+         try {
+             const response = (await agentmailFetch(path, {
+                 method: "POST",
+-                body: row.payload,
++                body: { ...row.payload, headers: Object.fromEntries(Object.entries(row.payload.headers ?? {}).filter(([key]) => key !== "X-Scout-Guard")) },
++        headers: { "Idempotency-Key": `scout-${row._id}` },
+             }));
+             // Defensive: AgentMail's send endpoints always return JSON; guard the
+             // pathological case so we surface a clear error rather than NPE on
+diff --git a/node_modules/@agentmail/convex/dist/component/utils.js b/node_modules/@agentmail/convex/dist/component/utils.js
+index 47ab5db..9481c75 100644
+--- a/node_modules/@agentmail/convex/dist/component/utils.js
++++ b/node_modules/@agentmail/convex/dist/component/utils.js
+@@ -43,7 +43,8 @@ export async function agentmailFetch(path, opts) {
+         }
+     }
+     const headers = {
+-        Authorization: `Bearer ${apiKey}`,
++        ...opts.headers,
++    Authorization: `Bearer ${apiKey}`,
+     };
+     let body;
+     if (opts.body !== undefined) {
 diff --git a/node_modules/@agentmail/convex/src/component/convex.config.ts b/node_modules/@agentmail/convex/src/component/convex.config.ts
+index b1cc7f1..05ddfb0 100644
 --- a/node_modules/@agentmail/convex/src/component/convex.config.ts
 +++ b/node_modules/@agentmail/convex/src/component/convex.config.ts
 @@ -1,7 +1,8 @@
@@ -11,15 +65,48 @@ diff --git a/node_modules/@agentmail/convex/src/component/convex.config.ts b/nod
  component.use(workpool, { name: "sendPool" });
  component.use(workpool, { name: "callbackPool" });
  
-diff --git a/node_modules/@agentmail/convex/dist/component/convex.config.js b/node_modules/@agentmail/convex/dist/component/convex.config.js
---- a/node_modules/@agentmail/convex/dist/component/convex.config.js
-+++ b/node_modules/@agentmail/convex/dist/component/convex.config.js
-@@ -1,6 +1,7 @@
-+import { v } from "convex/values";
- import { defineComponent } from "convex/server";
- import workpool from "@convex-dev/workpool/convex.config";
--const component = defineComponent("agentmail");
-+const component = defineComponent("agentmail", { env: { AGENTMAIL_API_KEY: v.string(), AGENTMAIL_BASE_URL: v.optional(v.string()) } });
- component.use(workpool, { name: "sendPool" });
- component.use(workpool, { name: "callbackPool" });
- export default component;
+diff --git a/node_modules/@agentmail/convex/src/component/lib.ts b/node_modules/@agentmail/convex/src/component/lib.ts
+index 121dd58..88121cb 100644
+--- a/node_modules/@agentmail/convex/src/component/lib.ts
++++ b/node_modules/@agentmail/convex/src/component/lib.ts
+@@ -235,7 +235,9 @@ export const getOutboundForSend = internalQuery({
+     const row = await ctx.db.get(args.outboundId);
+     if (!row) return null;
+     // cancelSend or markSendFailed already finalized this row — bail.
+-    if (row.status === "failed") return null;
++    if (row.status !== "pending" || Date.now() - row._creationTime > 23 * 3600000) return null;
++    const guard = row.payload.headers?.["X-Scout-Guard"];
++    if (guard && !await ctx.runQuery(guard as FunctionHandle<"query">, { outboundId: args.outboundId })) return null;
+     return row;
+   },
+ });
+@@ -254,7 +256,8 @@ export const performSend = internalAction({
+     try {
+       const response = (await agentmailFetch(path, {
+         method: "POST",
+-        body: row.payload,
++        body: { ...row.payload, headers: Object.fromEntries(Object.entries(row.payload.headers ?? {}).filter(([key]) => key !== "X-Scout-Guard")) },
++        headers: { "Idempotency-Key": `scout-${row._id}` },
+       })) as { message_id: string; thread_id: string } | null;
+ 
+       // Defensive: AgentMail's send endpoints always return JSON; guard the
+diff --git a/node_modules/@agentmail/convex/src/component/utils.ts b/node_modules/@agentmail/convex/src/component/utils.ts
+index e20117d..a513645 100644
+--- a/node_modules/@agentmail/convex/src/component/utils.ts
++++ b/node_modules/@agentmail/convex/src/component/utils.ts
+@@ -31,6 +31,7 @@ export class AgentMailApiError extends Error {
+ }
+ 
+ type FetchOptions = {
++  headers?: Record<string,string>;
+   method: "GET" | "POST" | "PATCH" | "DELETE";
+   body?: unknown;
+   query?: Record<string, string | number | boolean | undefined | null>;
+@@ -60,6 +61,7 @@ export async function agentmailFetch(
+   }
+ 
+   const headers: Record<string, string> = {
++    ...opts.headers,
+     Authorization: `Bearer ${apiKey}`,
+   };
+   let body: string | undefined;

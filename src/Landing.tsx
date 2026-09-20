@@ -96,7 +96,7 @@ export default function Landing() {
             <p>
               Find the hackathon worth your weekend.
               <br />
-              The paid gig that fits your skills.
+              With the constraints that matter to you.
               <br />
               And a clear reason to go for it.
             </p>

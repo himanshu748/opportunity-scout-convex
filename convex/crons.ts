@@ -37,4 +37,10 @@ crons.interval(
   internal.discovery.refreshStats,
   {},
 );
+crons.interval(
+  "recover digest and reply work",
+  { minutes: 5 },
+  internal.email.recover,
+  {},
+);
 export default crons;

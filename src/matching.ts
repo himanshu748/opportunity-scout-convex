@@ -1,4 +1,11 @@
 export type Opportunity = {
+  identity?: import("./eventIdentity").Identity;
+  eventKey?: string;
+  canonicalId?: string;
+  conflicts?: string[];
+  sourceAliases?: string[];
+  fieldEvidence?: import("./eventIdentity").FieldEvidence[];
+  deadlineEvidence?: string;
   _id: string;
   _creationTime?: number;
   title: string;
@@ -132,6 +139,8 @@ export function matchOpportunity(
   now = Date.now(),
 ) {
   const blockers: string[] = [];
+  if (opportunity.conflicts?.length)
+    blockers.push(`Sources disagree: ${opportunity.conflicts.join(", ")}`);
   if (
     opportunity.status === "closed" ||
     (opportunity.deadline !== null && opportunity.deadline <= now)

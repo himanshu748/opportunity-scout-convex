@@ -1,3 +1,6 @@
+import { normalizeSourceUrl } from "../src/discoveryPlan";
+import { fieldEvidence, identityKey } from "../src/eventIdentity";
+import { reconcileIdentity, resolveRecord } from "./identity";
 import { sortKeys } from "../src/opportunitySort";
 import {
   paginationOptsValidator,
@@ -75,14 +78,21 @@ export const toggleSave = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Sign in to save opportunities.");
-    const existing = await ctx.db
+    const target = await ctx.db.get(args.opportunityId);
+    if (!target) throw Error("Opportunity not found");
+    const canonical = target.canonicalId ?? target._id;
+    const saves = await ctx.db
       .query("saved")
-      .withIndex("by_userId_and_opportunityId", (q) =>
-        q.eq("userId", userId).eq("opportunityId", args.opportunityId),
-      )
-      .unique();
-    if (existing) {
-      await ctx.db.delete(existing._id);
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .take(100);
+    const matching = [];
+    for (const save of saves) {
+      const source = await ctx.db.get(save.opportunityId);
+      if ((source?.canonicalId ?? source?._id) === canonical)
+        matching.push(save);
+    }
+    if (matching.length) {
+      for (const save of matching) await ctx.db.delete(save._id);
       return false;
     }
     const opportunity = await ctx.db.get(args.opportunityId);
@@ -108,22 +118,48 @@ export const candidates = internalQuery({
     (
       await ctx.db
         .query("opportunities")
-        .withIndex("by_validUntil", (q) => q.gt("validUntil", Date.now()))
+        .withIndex("by_kind_and_validUntil", (q) =>
+          q.eq("kind", "hackathon").gt("validUntil", Date.now()),
+        )
         .take(250)
-    ).filter((o) => isActiveOpportunity(o)),
+    ).filter(
+      (o) => isActiveOpportunity(o) && !o.canonicalId && o.kind === "hackathon",
+    ),
 });
 export const upsert = internalMutation({
   args: opportunityFields,
   returns: v.id("opportunities"),
   handler: async (ctx, args) => {
+    args.url = normalizeSourceUrl(args.url) ?? args.url;
     if (!isDetailUrl(args.url))
       throw new Error("A direct opportunity source is required.");
-    const existing = await ctx.db
+    if (
+      args.identity &&
+      normalizeSourceUrl(args.identity.sourceUrl) !== args.url
+    )
+      throw Error("Identity evidence belongs to a different source");
+    const sameUrl = await ctx.db
       .query("opportunities")
       .withIndex("by_url", (q) => q.eq("url", args.url))
-      .unique();
+      .order("desc")
+      .take(12);
+    const edition =
+      args.identity?.edition ?? args.title.match(/\b20\d{2}\b/)?.[0];
+    const existing = sameUrl.find(
+      (o) =>
+        (o.identity?.edition ?? o.title.match(/\b20\d{2}\b/)?.[0]) === edition,
+    );
     const fields = {
       ...args,
+      identity: existing?.identityReviewHold
+        ? undefined
+        : (args.identity ?? existing?.identity),
+      eventKey: existing?.identityReviewHold
+        ? undefined
+        : args.identity
+          ? (identityKey(args.identity) ?? undefined)
+          : existing?.eventKey,
+      identityReviewHold: existing?.identityReviewHold,
       deadlineDate: args.deadlineDate,
       ...sortKeys(args),
       cashAmount: args.cashAmount,
@@ -140,6 +176,12 @@ export const upsert = internalMutation({
       await ctx.db.patch(existing._id, fields);
       id = existing._id;
     } else id = await ctx.db.insert("opportunities", fields);
+    await ctx.db.insert("sourceObservations", {
+      opportunityId: id,
+      facts: fieldEvidence({ ...fields, _id: id }),
+      observedAt: args.checkedAt,
+    });
+    await reconcileIdentity(ctx, id);
     if (
       args.deadline &&
       args.deadline > Date.now() &&
@@ -172,7 +214,8 @@ export const disqualify = internalMutation({
     const existing = await ctx.db
       .query("opportunities")
       .withIndex("by_url", (q) => q.eq("url", url))
-      .unique();
+      .order("desc")
+      .first();
     if (existing)
       await ctx.db.patch(existing._id, { status: "closed", validUntil: 0 });
     return null;
@@ -186,7 +229,8 @@ export const unconfirm = internalMutation({
     const existing = await ctx.db
       .query("opportunities")
       .withIndex("by_url", (q) => q.eq("url", url))
-      .unique();
+      .order("desc")
+      .first();
     if (existing)
       await ctx.db.patch(existing._id, {
         deadlineConfirmed: false,
@@ -267,6 +311,8 @@ export const page = query({
       page: batch.page.filter(
         (o) =>
           isActiveOpportunity(o) &&
+          !o.canonicalId &&
+          o.kind === "hackathon" &&
           words.every((word) =>
             [o.title, o.organization, ...o.skills]
               .join(" ")
@@ -316,11 +362,21 @@ export const savedData = query({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .take(100);
     const records = await Promise.all(
-      saved.map((s) => ctx.db.get(s.opportunityId)),
+      saved.map(async (s) => {
+        const o = await ctx.db.get(s.opportunityId);
+        return o ? resolveRecord(ctx, o) : null;
+      }),
     );
     return {
-      ids: saved.map((s) => s.opportunityId),
-      records: records.flatMap((o) => (o && isActiveOpportunity(o) ? [o] : [])),
+      ids: [
+        ...new Set([
+          ...saved.map((s) => s.opportunityId),
+          ...records.flatMap((o) => (o ? [o._id] : [])),
+        ]),
+      ],
+      records: records
+        .filter((o, i, a) => o && a.findIndex((x) => x?._id === o._id) === i)
+        .flatMap((o) => (o && isActiveOpportunity(o) ? [o] : [])),
     };
   },
 });
@@ -356,7 +412,8 @@ export const updatePrizes = internalMutation({
       const item = await ctx.db
         .query("opportunities")
         .withIndex("by_url", (q) => q.eq("url", url))
-        .unique();
+        .order("desc")
+        .first();
       if (!item) continue;
       const fields = {
         ...(cash.reward !== undefined ? { reward: cash.reward } : {}),
