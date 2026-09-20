@@ -364,6 +364,15 @@ export function Shell({
   return (
     <div className="app-shell">
       <aside className="sidebar" inert={loginOpen}>
+        <div className="sidebar-brand" aria-label="Opportunity Scout">
+          <span className="sidebar-brand-mark">
+            <Compass size={20} />
+          </span>
+          <span>
+            <strong>Opportunity Scout</strong>
+            <small>Decision workspace</small>
+          </span>
+        </div>
         <nav aria-label="Main navigation">
           {nav.map((n) => (
             <button
@@ -393,7 +402,8 @@ export function Shell({
       </aside>
       <main inert={loginOpen}>
         <header className="topbar">
-          <span className="breadcrumb">
+          <div className="topbar-heading">
+            <span className="breadcrumb">Workspace</span>
             <strong>
               {view === "board"
                 ? "Discover"
@@ -405,7 +415,7 @@ export function Shell({
                       ? "Weekly digest"
                       : "Advisor"}
             </strong>
-          </span>
+          </div>
           <div className="top-actions">
             <span className="mode-label">
               <span
@@ -454,11 +464,18 @@ export function Shell({
           {(view === "board" || view === "saved") && (
             <>
               <div className="board-summary">
-                <p>
-                  {view === "saved"
-                    ? "Your active saved picks."
-                    : "Hackathons · source checks expire after 48 hours"}
-                </p>
+                <div>
+                  <h1>
+                    {view === "saved"
+                      ? "Your shortlist"
+                      : "Find the build worth your time"}
+                  </h1>
+                  <p>
+                    {view === "saved"
+                      ? `${savedCount} active ${savedCount === 1 ? "opportunity" : "opportunities"}, kept in one place for a closer decision.`
+                      : `${activeRows.length} active hackathons with source-checked deadlines, reward evidence, and the details you need before committing.`}
+                  </p>
+                </div>
                 <button className="text-button" onClick={activeProfile}>
                   {model.profile ? "Edit preferences" : "Set preferences"}{" "}
                   <SlidersHorizontal size={16} />
@@ -467,125 +484,65 @@ export function Shell({
               <section className="board" aria-label="Opportunity catalog">
                 <div className="catalog">
                   <div className="catalog-toolbar">
-                    <div
-                      className="tabs"
-                      role="group"
-                      aria-label="Opportunity type"
-                    >
-                      {(
-                        ["hackathon"] as (
-                          "all" | "hackathon" | "gig" | "grant"
-                        )[]
-                      ).map((k) => (
-                        <button
-                          key={k}
-                          aria-pressed={kind === k}
-                          className={kind === k ? "selected" : ""}
-                          onClick={() => setKind(k)}
-                        >
-                          {k === "all"
-                            ? "All opportunities"
-                            : k === "hackathon"
-                              ? "Hackathons"
-                              : k === "grant"
-                                ? "Grants"
-                                : "Gigs"}
-                        </button>
-                      ))}
+                    <div className="catalog-heading">
+                      <div>
+                        <h2>
+                          {view === "saved"
+                            ? "Saved opportunities"
+                            : "Live opportunities"}
+                        </h2>
+                        <p>
+                          {view === "saved"
+                            ? "Compare the options you want to revisit."
+                            : "Closing soonest first. Select one to inspect its evidence."}
+                        </p>
+                      </div>
+                      <span className="catalog-count">
+                        {activeRows.length}{" "}
+                        {view === "saved" ? "saved" : "live"}
+                      </span>
                     </div>
-                    <details className="suggest-source">
-                      <summary>Missing an opportunity?</summary>
-                      <form
-                        onSubmit={async (event) => {
-                          event.preventDefault();
-                          if (!model.authenticated) {
-                            openLogin();
-                            return;
-                          }
-                          if (!model.submitSource) return;
-                          setError("");
-                          setNotice("");
-                          setSubmittingSource(true);
-                          try {
-                            setNotice(await model.submitSource(sourceUrl));
-                            setSourceUrl("");
-                          } catch (error) {
-                            setError(
-                              error instanceof ConvexError
-                                ? String(error.data)
-                                : "Could not submit this link. Please try again.",
-                            );
-                          } finally {
-                            setSubmittingSource(false);
-                          }
-                        }}
-                      >
-                        <label htmlFor="source-url">
-                          Official event or organizer URL
-                        </label>
-                        <div className="suggest-source-row">
-                          <input
-                            id="source-url"
-                            type="url"
-                            required
-                            maxLength={2000}
-                            placeholder="https://…"
-                            value={sourceUrl}
-                            onChange={(event) =>
-                              setSourceUrl(event.target.value)
-                            }
-                          />
+                    <div className="catalog-controls">
+                      <label className="search">
+                        <Search size={18} />
+                        <input
+                          aria-label="Search opportunities"
+                          placeholder="Search by title, organizer, or skill"
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                        />
+                        {search && (
                           <button
-                            className="btn"
-                            type="submit"
-                            disabled={submittingSource}
+                            aria-label="Clear search"
+                            onClick={() => setSearch("")}
                           >
-                            {submittingSource ? "Submitting…" : "Submit link"}
+                            <X size={16} />
                           </button>
-                        </div>
-                        <small>
-                          We verify applications and deadlines before
-                          publishing. No X links.
-                        </small>
-                      </form>
-                    </details>
-                    <label className="search">
-                      <Search size={16} />
-                      <input
-                        aria-label="Search opportunities"
-                        placeholder="Search a skill, title, or organizer"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                      />
-                      {search && (
-                        <button
-                          aria-label="Clear search"
-                          onClick={() => setSearch("")}
-                        >
-                          <X size={16} />
-                        </button>
-                      )}
-                    </label>
-                    <label className="sort-control">
-                      Sort by
-                      <select
-                        value={sort}
-                        onChange={(event) =>
-                          setSort(event.target.value as OpportunitySort)
-                        }
-                      >
-                        {model.profile && (
-                          <option value="bestFit">Best match for me</option>
                         )}
-                        <option value="endingSoon">Ending soonest</option>
-                        <option value="endingLast">Most time remaining</option>
-                        <option value="prize">
-                          Highest listed prize pool (USD)
-                        </option>
-                        <option value="cash">Highest cash prize (USD)</option>
-                        <option value="newest">Recently added</option>
-                      </select>
-                    </label>
+                      </label>
+                      <label className="sort-control">
+                        <span>Sort</span>
+                        <select
+                          value={sort}
+                          onChange={(event) =>
+                            setSort(event.target.value as OpportunitySort)
+                          }
+                        >
+                          {model.profile && (
+                            <option value="bestFit">Best match for me</option>
+                          )}
+                          <option value="endingSoon">Ending soonest</option>
+                          <option value="endingLast">
+                            Most time remaining
+                          </option>
+                          <option value="prize">
+                            Highest listed prize pool (USD)
+                          </option>
+                          <option value="cash">Highest cash prize (USD)</option>
+                          <option value="newest">Recently added</option>
+                        </select>
+                      </label>
+                    </div>
                     {sort === "bestFit" && (
                       <p className="sort-note">
                         Ranked by your saved skills, time, location and goals
@@ -605,14 +562,6 @@ export function Shell({
                       </p>
                     )}
                     <div className="list-meta">
-                      <span>
-                        {activeRows.length}{" "}
-                        {activeRows.length === 1
-                          ? "opportunity"
-                          : "opportunities"}
-                        {model.more && view === "board" ? " loaded" : ""}
-                        {!connected ? " · sample listings" : ""}
-                      </span>
                       <label>
                         <input
                           type="checkbox"
@@ -622,6 +571,64 @@ export function Shell({
                         />{" "}
                         No known conflicts
                       </label>
+                      {view === "board" && (
+                        <details className="suggest-source">
+                          <summary>Suggest a missing event</summary>
+                          <form
+                            onSubmit={async (event) => {
+                              event.preventDefault();
+                              if (!model.authenticated) {
+                                openLogin();
+                                return;
+                              }
+                              if (!model.submitSource) return;
+                              setError("");
+                              setNotice("");
+                              setSubmittingSource(true);
+                              try {
+                                setNotice(await model.submitSource(sourceUrl));
+                                setSourceUrl("");
+                              } catch (error) {
+                                setError(
+                                  error instanceof ConvexError
+                                    ? String(error.data)
+                                    : "Could not submit this link. Please try again.",
+                                );
+                              } finally {
+                                setSubmittingSource(false);
+                              }
+                            }}
+                          >
+                            <label htmlFor="source-url">
+                              Official event or organizer URL
+                            </label>
+                            <div className="suggest-source-row">
+                              <input
+                                id="source-url"
+                                type="url"
+                                required
+                                maxLength={2000}
+                                placeholder="https://…"
+                                value={sourceUrl}
+                                onChange={(event) =>
+                                  setSourceUrl(event.target.value)
+                                }
+                              />
+                              <button
+                                className="secondary"
+                                type="submit"
+                                disabled={submittingSource}
+                              >
+                                {submittingSource ? "Submitting…" : "Submit"}
+                              </button>
+                            </div>
+                            <small>
+                              We verify applications and deadlines before
+                              publishing. No X links.
+                            </small>
+                          </form>
+                        </details>
+                      )}
                     </div>
                   </div>
                   {model.list === undefined ? (
@@ -703,29 +710,33 @@ export function Shell({
                                 {o.origin === "example" && (
                                   <span className="sample-label">Sample</span>
                                 )}
+                                {o.deadline !== null && (
+                                  <span
+                                    className={`deadline-countdown ${o.deadline - now < 86400000 ? "deadline-urgent" : ""}`}
+                                  >
+                                    <Clock size={15} />
+                                    {o.conflicts?.includes("deadline")
+                                      ? "Deadline disputed"
+                                      : deadlineLabel(
+                                          o.deadline,
+                                          now,
+                                          o.deadlineDate,
+                                        )}
+                                  </span>
+                                )}
                               </span>
                               <h2>{o.title}</h2>
                               <span className="organization">
                                 {o.organization}
                               </span>
-                              {o.deadline !== null && (
-                                <span
-                                  className={`deadline-countdown ${o.deadline - now < 86400000 ? "deadline-urgent" : ""}`}
-                                >
-                                  <Clock size={16} />
-                                  {o.conflicts?.includes("deadline")
-                                    ? "Deadline disputed"
-                                    : deadlineLabel(
-                                        o.deadline,
-                                        now,
-                                        o.deadlineDate,
-                                      )}
+                              <span className="row-reward-group">
+                                <span className="row-reward">
+                                  {o.reward || "Prize details not listed"}
                                 </span>
-                              )}
-                              <span className="row-reward">
-                                {o.reward || "Prize details not listed"}
+                                <span className="cash-prize">
+                                  {cashLabel(o)}
+                                </span>
                               </span>
-                              <span className="cash-prize">{cashLabel(o)}</span>
                               {model.profile && (
                                 <span className="match-reason">
                                   {profileFitLabel(o, model.profile, now)}
@@ -795,40 +806,42 @@ export function Shell({
                 <aside className="detail" aria-label="Selected opportunity">
                   {item ? (
                     <>
-                      <h2>{item.title}</h2>
-                      <p className="detail-org">By {item.organization}</p>
-                      <div className="verified-status">
-                        <span className="status-dot" />
-                        {item.conflicts?.length
-                          ? "Sources disagree · review required"
-                          : "Active · "}
-                        {!item.conflicts?.length &&
-                          (item.deadlineDate
-                            ? "closing date confirmed · time unspecified"
-                            : item.deadlineConfirmed
-                              ? "deadline confirmed"
-                              : "source checked")}
+                      <div className="detail-header">
+                        <div className="verified-status">
+                          <span className="status-dot" />
+                          {item.conflicts?.length
+                            ? "Sources disagree · review required"
+                            : "Active · "}
+                          {!item.conflicts?.length &&
+                            (item.deadlineDate
+                              ? "closing date confirmed · time unspecified"
+                              : item.deadlineConfirmed
+                                ? "deadline confirmed"
+                                : "source checked")}
+                        </div>
+                        <h2>{item.title}</h2>
+                        <p className="detail-org">By {item.organization}</p>
+                        {item.deadline !== null &&
+                          !item.conflicts?.includes("deadline") && (
+                            <div
+                              className={`detail-countdown ${item.deadline - now < 86400000 ? "deadline-urgent" : ""}`}
+                            >
+                              <Clock size={18} />
+                              <strong>
+                                {deadlineLabel(
+                                  item.deadline,
+                                  now,
+                                  item.deadlineDate,
+                                )}
+                              </strong>
+                              <small>
+                                {item.deadlineDate
+                                  ? "Exact closing time is unavailable. Hidden before the closing date begins to avoid showing an expired opportunity."
+                                  : "Automatically leaves the board when time runs out."}
+                              </small>
+                            </div>
+                          )}
                       </div>
-                      {item.deadline !== null &&
-                        !item.conflicts?.includes("deadline") && (
-                          <div
-                            className={`detail-countdown ${item.deadline - now < 86400000 ? "deadline-urgent" : ""}`}
-                          >
-                            <Clock size={16} />
-                            <strong>
-                              {deadlineLabel(
-                                item.deadline,
-                                now,
-                                item.deadlineDate,
-                              )}
-                            </strong>
-                            <small>
-                              {item.deadlineDate
-                                ? "Exact closing time is unavailable. Hidden before the closing date begins to avoid showing an expired opportunity."
-                                : "Automatically leaves the board when time runs out."}
-                            </small>
-                          </div>
-                        )}
                       <p className="description">{item.description}</p>
                       <dl>
                         <div>
