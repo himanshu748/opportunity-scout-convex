@@ -39,19 +39,29 @@ export const enqueue = internalMutation({
   },
 });
 export const claim = internalMutation({
-  args: { url: v.optional(v.string()) },
+  args: { url: v.optional(v.string()), preferActive: v.optional(v.boolean()) },
   returns: v.any(),
   handler: async (ctx, args) => {
     const now = Date.now();
+    const refresh =
+      !args.url && args.preferActive
+        ? await ctx.db
+            .query("sourceQueue")
+            .withIndex("by_result_nextCheckAt", (q) =>
+              q.eq("result", "active").lte("nextCheckAt", now),
+            )
+            .first()
+        : null;
     const item = args.url
       ? await ctx.db
           .query("sourceQueue")
           .withIndex("by_url", (q) => q.eq("url", args.url!))
           .unique()
-      : await ctx.db
+      : (refresh ??
+        (await ctx.db
           .query("sourceQueue")
           .withIndex("by_nextCheckAt", (q) => q.lte("nextCheckAt", now))
-          .first();
+          .first()));
     if (!item || (item.leaseUntil ?? 0) > now) return null;
     await ctx.db.patch(item._id, {
       leaseUntil: now + 5 * 60000,
@@ -347,8 +357,15 @@ export const submitSource = mutation({
       .query("sourceQueue")
       .withIndex("by_url", (q) => q.eq("url", url))
       .unique();
-    if (existing)
-      return "Scout already knows this link. It will appear only after its open application window is verified.";
+    if (existing) {
+      if (existing.result === "active")
+        return "This source was previously verified. If it is missing, its deadline may have passed or its source check may need refreshing.";
+      if (/retry|failed|rate limit/i.test(existing.result ?? ""))
+        return "This source could not be checked. It is queued for retry; it has not been confirmed closed.";
+      if (!existing.lastCheckedAt)
+        return "This link is in the verification queue. It will appear once its submission window and closing date are confirmed.";
+      return "We found this source, but could not confirm an open submission window and deadline. It is scheduled for another check.";
+    }
     await ctx.db.insert("sourceSubmissions", {
       userId,
       url,

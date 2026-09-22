@@ -278,8 +278,17 @@ export const page = query({
           : sort === "endingLast"
             ? "by_status_kind_last"
             : "by_status_kind_soon";
-    const query =
-      sort === "newest"
+    const search = args.search?.trim();
+    const query = search
+      ? ctx.db
+          .query("opportunities")
+          .withSearchIndex("search_catalog", (q) =>
+            q
+              .search("searchText", search)
+              .eq("status", "open")
+              .eq("kind", "hackathon"),
+          )
+      : sort === "newest"
         ? args.kind
           ? ctx.db
               .query("opportunities")
@@ -300,26 +309,66 @@ export const page = query({
           : ctx.db
               .query("opportunities")
               .withIndex(index, (q) => q.eq("status", "open"));
-    const batch = await query.paginate(args.paginationOpts);
-    const words = (args.search ?? "")
-      .trim()
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(Boolean);
+    // Stable snapshot bounds keep Convex cursors valid across page requests.
+    // Revalidate against server time below: asOf is not a freshness authority.
+    const snapshot = args.asOf;
+    const result = await query
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("kind"), "hackathon"),
+          q.eq(q.field("origin"), "source"),
+          q.eq(q.field("canonicalId"), undefined),
+          q.eq(q.field("acceptingSubmissions"), true),
+          q.eq(q.field("deadlineConfirmed"), true),
+          q.gt(q.field("deadline"), snapshot),
+          q.gte(q.field("checkedAt"), snapshot - 48 * 3600000),
+        ),
+      )
+      .paginate(args.paginationOpts);
     return {
-      ...batch,
-      page: batch.page.filter(
-        (o) =>
-          isActiveOpportunity(o) &&
-          !o.canonicalId &&
-          o.kind === "hackathon" &&
-          words.every((word) =>
-            [o.title, o.organization, ...o.skills]
-              .join(" ")
-              .toLowerCase()
-              .includes(word),
-          ),
-      ),
+      ...result,
+      page: result.page.filter((o) => isActiveOpportunity(o, Date.now())),
+    };
+  },
+});
+
+/** Public catalog health, bounded and labelled when the inventory exceeds the scan. */
+export const coverage = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const records = await ctx.db
+      .query("opportunities")
+      .withIndex("by_status_and_kind", (q) =>
+        q.eq("status", "open").eq("kind", "hackathon"),
+      )
+      .take(1001);
+    const scanned = records
+      .slice(0, 1000)
+      .filter((o) => !o.canonicalId && o.origin === "source");
+    const active = scanned.filter((o) => isActiveOpportunity(o, now));
+    const pending = scanned.filter(
+      (o) =>
+        !isActiveOpportunity(o, now) &&
+        (o.deadline === null || o.deadline > now),
+    );
+    return {
+      active: active.length,
+      remote: active.filter((o) => o.remote).length,
+      closingWeek: active.filter((o) => o.deadline! <= now + 7 * 86400000)
+        .length,
+      limited: records.length > 1000,
+      pending: pending.length,
+      pendingExamples: pending.slice(0, 8).map((o) => ({
+        title: o.title,
+        url: o.url,
+        reason:
+          !o.deadlineConfirmed || o.deadline === null
+            ? "Closing date needs confirmation"
+            : !o.acceptingSubmissions
+              ? "Submission window needs confirmation"
+              : "Source check is older than 48 hours",
+      })),
     };
   },
 });

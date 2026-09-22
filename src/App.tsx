@@ -57,6 +57,20 @@ const initialProfile: Profile = {
 type View = "board" | "saved" | "digest" | "profile" | "advisor";
 export type Model = {
   list: Opportunity[] | undefined;
+  coverage?: {
+    active: number;
+    remote: number;
+    closingWeek: number;
+    limited: boolean;
+    pending: number;
+    pendingExamples: { title: string; url: string; reason: string }[];
+  };
+  discovery?: {
+    pending: number;
+    failed: number;
+    searching: boolean;
+    countsUpdatedAt: number | null;
+  };
   savedList?: Opportunity[];
   filter?: (
     search: string,
@@ -104,6 +118,8 @@ function Connected() {
   );
   const list =
     catalog.status === "LoadingFirstPage" ? undefined : catalog.results;
+  const coverage = useQuery(api.board.coverage, {});
+  const discovery = useQuery(api.discovery.status, {});
   const saved = useQuery(api.board.savedData, {}),
     profile = useQuery(api.profiles.mine, {}),
     latest = useQuery(api.profiles.latest, {}),
@@ -121,6 +137,8 @@ function Connected() {
       connected
       model={{
         list,
+        coverage,
+        discovery,
         more:
           catalog.status === "CanLoadMore" || catalog.status === "LoadingMore"
             ? {
@@ -215,6 +233,7 @@ export function Shell({
       new URLSearchParams(window.location.search).get("opportunity"),
     ),
     [onlyFit, setOnlyFit] = useState(false),
+    [remoteOnly, setRemoteOnly] = useState(false),
     [loginOpen, setLoginOpen] = useState(false),
     [flow, setFlow] = useState("signIn"),
     [error, setError] = useState(""),
@@ -291,6 +310,7 @@ export function Shell({
     (o) =>
       (kind === "all" || o.kind === kind) &&
       (view !== "saved" || model.saved.includes(o._id)) &&
+      (!remoteOnly || o.remote) &&
       ((model.filter && view !== "saved") ||
         `${o.title} ${o.organization} ${o.skills.join(" ")}`
           .toLowerCase()
@@ -403,7 +423,6 @@ export function Shell({
       <main inert={loginOpen}>
         <header className="topbar">
           <div className="topbar-heading">
-            <span className="breadcrumb">Workspace</span>
             <strong>
               {view === "board"
                 ? "Discover"
@@ -473,7 +492,7 @@ export function Shell({
                   <p>
                     {view === "saved"
                       ? `${savedCount} active ${savedCount === 1 ? "opportunity" : "opportunities"}, kept in one place for a closer decision.`
-                      : `${activeRows.length} active hackathons with source-checked deadlines, reward evidence, and the details you need before committing.`}
+                      : "A clear view of what’s open, what fits, and what’s worth building next."}
                   </p>
                 </div>
                 <button className="text-button" onClick={activeProfile}>
@@ -481,6 +500,81 @@ export function Shell({
                   <SlidersHorizontal size={16} />
                 </button>
               </div>
+              {view === "board" && (
+                <div className="catalog-context">
+                  <div className="coverage-facts" aria-label="Catalog coverage">
+                    <span>
+                      <strong>
+                        {model.coverage
+                          ? `${model.coverage.active}${model.coverage.limited ? "+" : ""}`
+                          : "—"}
+                      </strong>{" "}
+                      verified open
+                    </span>
+                    <span>
+                      <Globe size={16} />
+                      <strong>{model.coverage?.remote ?? "—"}</strong> remote
+                    </span>
+                    <span>
+                      <Clock size={16} />
+                      <strong>{model.coverage?.closingWeek ?? "—"}</strong>{" "}
+                      close this week
+                    </span>
+                  </div>
+                  <details className="coverage-explainer">
+                    <summary>
+                      Missing a hackathon? <ChevronRight size={16} />
+                    </summary>
+                    <div className="coverage-content">
+                      <h3>What makes it onto your board</h3>
+                      <p>
+                        We require an open submission window, a confirmed
+                        closing date, and a source check within 48 hours.
+                        Expired events leave automatically. Discovery covers a
+                        growing set of sources; it is not an index of every
+                        hackathon.
+                      </p>
+                      {model.discovery && (
+                        <p>
+                          {model.discovery.searching
+                            ? "Source checks are running."
+                            : "Source checks run in the background."}{" "}
+                          {model.discovery.pending.toLocaleString()} sources are
+                          waiting for verification, including{" "}
+                          {model.discovery.failed.toLocaleString()} failed
+                          checks awaiting retry.
+                          {model.discovery.countsUpdatedAt
+                            ? ` Queue snapshot: ${new Date(model.discovery.countsUpdatedAt).toLocaleString()}.`
+                            : ""}
+                        </p>
+                      )}
+                      {!!model.coverage?.pending && (
+                        <p>
+                          <strong>
+                            {model.coverage.pending} source records need another
+                            check.
+                          </strong>{" "}
+                          These are not verified open leads:
+                        </p>
+                      )}
+                      {model.coverage?.pendingExamples.map((event) => (
+                        <div className="coverage-event" key={event.url}>
+                          <a href={event.url} target="_blank" rel="noreferrer">
+                            {event.title}
+                            <ArrowUpRight size={14} />
+                          </a>
+                          <span>{event.reason}</span>
+                        </div>
+                      ))}
+                      <p>
+                        Use “Suggest a missing event” below to submit an
+                        official link. “No known conflicts” only hides profile
+                        conflicts when you turn it on.
+                      </p>
+                    </div>
+                  </details>
+                </div>
+              )}
               <section className="board" aria-label="Opportunity catalog">
                 <div className="catalog">
                   <div className="catalog-toolbar">
@@ -494,12 +588,17 @@ export function Shell({
                         <p>
                           {view === "saved"
                             ? "Compare the options you want to revisit."
-                            : "Closing soonest first. Select one to inspect its evidence."}
+                            : search.trim()
+                              ? "Search covers the full catalog. Sorting applies to loaded matches."
+                              : "Compare the brief, check the evidence, make your next move."}
                         </p>
                       </div>
                       <span className="catalog-count">
                         {activeRows.length}{" "}
-                        {view === "saved" ? "saved" : "live"}
+                        {view === "saved" ? "saved" : "shown"}
+                        {view !== "saved" && model.more
+                          ? " · more available"
+                          : ""}
                       </span>
                     </div>
                     <div className="catalog-controls">
@@ -562,6 +661,14 @@ export function Shell({
                       </p>
                     )}
                     <div className="list-meta">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={remoteOnly}
+                          onChange={(e) => setRemoteOnly(e.target.checked)}
+                        />{" "}
+                        Remote only
+                      </label>
                       <label>
                         <input
                           type="checkbox"
@@ -630,6 +737,14 @@ export function Shell({
                         </details>
                       )}
                     </div>
+                    {(remoteOnly || onlyFit) && (
+                      <p className="sort-note">
+                        Filters apply to loaded opportunities.
+                        {model.more
+                          ? " Load more to see additional matches."
+                          : ""}
+                      </p>
+                    )}
                   </div>
                   {model.list === undefined ? (
                     <div className="empty">
@@ -643,14 +758,18 @@ export function Shell({
                       <h3>
                         {view === "saved"
                           ? "Your shortlist starts here."
-                          : "Nothing here just yet."}
+                          : model.more
+                            ? "Keep exploring the catalog"
+                            : "No matching opportunities"}
                       </h3>
                       <p>
                         {view === "saved"
                           ? "Save an opportunity from Discover to return to it later."
-                          : search
-                            ? "Try a different skill or clear your filters."
-                            : "New opportunities will appear after the source refresh runs."}
+                          : model.more
+                            ? "More results are available. Load the next page, or adjust your filters."
+                            : search
+                              ? "Try a different skill or clear your filters."
+                              : "New opportunities will appear after the source refresh runs."}
                       </p>
                       <button
                         className="secondary"
@@ -658,6 +777,7 @@ export function Shell({
                           setSearch("");
                           setKind("all");
                           setOnlyFit(false);
+                          setRemoteOnly(false);
                           setView("board");
                         }}
                       >
@@ -677,7 +797,7 @@ export function Shell({
                             className="row-main"
                             onClick={() => {
                               setSelected(o._id);
-                              if (window.innerWidth <= 760)
+                              if (window.innerWidth <= 1100)
                                 setTimeout(
                                   () =>
                                     document

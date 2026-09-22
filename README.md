@@ -4,6 +4,8 @@ Scout helps you decide which hackathon deserves your time. It compares source ev
 
 **September 20 release:** reliability changes are deployed on the existing Scout app. See [verification and release evidence](docs/reliability-review.md). [The public VibeApps submission exists](https://vibeapps.dev/s/opportunity-scout); older build-log failures describe earlier attempts. A real personalized digest and refined reply reached the authorized Gmail account; normal polling and formatted HTML/plain-text delivery were verified, and STOP restored the test profile to unsubscribed.
 
+**September 22 catalog update:** full-catalog search, active-first pagination, balanced source refresh, and a more readable responsive dashboard. The board now explains missing-event checks and shows catalog coverage separately from the source queue. See [coverage audit and verification](docs/catalog-coverage.md).
+
 [Open the live app](https://graceful-spoonbill-850.convex.site) · [Source](https://github.com/himanshu748/opportunity-scout-convex) · [Build log](hackathon.md) · [Watch demo](https://drive.google.com/file/d/1Qx-wNIrZ9GYO3j78sQm42wcHX6a-z9Qp/view)
 
 A React + TypeScript app with a public landing page and a Convex-backed opportunity workspace. The workspace uses Convex Auth, Firecrawl discovery, a Mastra advisor running an OpenAI model, and an AgentMail digest component.
@@ -27,7 +29,7 @@ The committed lockfile pins dependencies. `postinstall` applies the AgentMail co
 
 ## Discovery and deadlines
 
-Discovery rotates through 28 query themes over four days: sponsor sites, community posts, university events, GitHub, developer challenges, and niche boards. A daily Convex job at 01:30 UTC (07:00 IST) searches six rotating themes plus four daily grant/community queries, follows event links from source pages, and stores deduplicated candidates in a durable queue. A sequential leased worker drains due sources without parallel queue claims, with an hourly recovery job; each claim reads only the next due candidate. Asset and navigation URLs are filtered out. Devpost open-event feeds are imported directly only after verifying the exact submission countdown on each event page. An authenticated user can request a search with a 15-minute shared cooldown. This is broad public-web discovery, not an exhaustive index of the internet. Provider quotas and source accessibility limit coverage.
+Discovery rotates through 24 query themes over four days: sponsor sites, community posts, university events, GitHub, developer challenges, and niche boards. A daily Convex job at 01:30 UTC (07:00 IST) searches six rotating themes, five daily queries and six rotating platform queries, follows event links from source pages, and stores deduplicated candidates in a durable queue. A sequential leased worker drains due sources without parallel queue claims, with an hourly recovery job. Its four-attempt batches alternate a due known-active source with the oldest due source, so new-source backlogs do not monopolize rechecks. Asset and navigation URLs are filtered out. Devpost open-event feeds are imported directly only after verifying the exact submission countdown on each event page. An authenticated user can request a search with a 15-minute shared cooldown. This is broad public-web discovery, not an exhaustive index of the internet. Provider quotas and source accessibility limit coverage.
 
 The catalog hides closed, expired, unconfirmed, and stale hackathons. Source checks must be no older than 48 hours. Deadline expiration is scheduled in Convex and enforced in the client. A 650 ms inert exit animation removes expired rows; reduced-motion users get immediate removal. Saved records are preserved but expired opportunities leave the active dashboard.
 
@@ -43,7 +45,7 @@ Scout uses an explicitly authorized shared AgentMail inbox, configured with `AGE
 
 ## Verification
 
-Production build and 47 unit tests pass. Live checks exercised Convex sign-in, profile isolation, private storage, saving an opportunity, source discovery, and the advisor. Desktop/mobile checks confirm buttons use 4 px vertical/8 px horizontal padding and workspace icons are 16 px. An isolated synthetic deadline test verified automatic removal without writing a test opportunity to the real catalog.
+The September 22 production build and 113 automated tests pass. Earlier live checks exercised Convex sign-in, profile isolation, private storage, saving an opportunity, source discovery, and the advisor; those provider/account flows were not repeated for the catalog update. The latest browser checks cover desktop/mobile layout, catalog search, pagination, remote filtering and the missing-event disclosure. An earlier isolated synthetic deadline test verified automatic removal without writing a test opportunity to the real catalog.
 
 Discovery counts are refreshed hourly instead of scanning the source queue every five minutes. The daily job runs on Convex even when the browser is closed. Deadline expiry remains independently scheduled.
 
@@ -82,9 +84,9 @@ An unset provider preserves the existing Vercel/direct-OpenAI selection. An expl
 
 ### Discovery coverage
 
-Daily discovery now combines Devpost's open feed, public HTML links from 14 event directories, and 16 rotating search queries (plus a topic query when requested). The platform-specific searches cover 12 platforms over two days. Directory fetches run independently of Firecrawl search quotas. All links are leads until an organizer or established event platform confirms an open submission window; an event's end date alone is insufficient. The lablab.ai adapter reads the explicit submission timeline and open offer metadata. Ambiguous sources stay in the verification queue, outside the active catalog. X/Twitter links are rejected.
+Daily discovery combines Devpost's open feed, public HTML links from 14 event directories, and 17 search queries (plus a topic query when requested). The platform-specific searches cover 12 platforms over two days. Directory fetches run independently of Firecrawl search quotas. All links are leads until an organizer or established event platform confirms an open submission window; an event's end date alone is insufficient. The lablab.ai adapter reads the explicit submission timeline and open offer metadata. Ambiguous sources stay in the verification queue, outside the active catalog. X/Twitter links are rejected.
 
-The board's “Missing an opportunity?” form accepts authenticated community suggestions, deduplicates canonical URLs, and limits each account to five new links per day. It never publishes a submitted link directly. Exact numeric timezone offsets and explicit India, Japan, and Singapore timezone labels are supported by deadline verification. This expands coverage; it is not a claim to index every hackathon on the internet.
+The board's “Suggest a missing event” form accepts authenticated community suggestions, deduplicates canonical URLs, and limits each account to five new links per day. It never publishes a submitted link directly. “Missing a hackathon?” explains the freshness requirements and displays unconfirmed source records separately from verified-open events. Exact numeric timezone offsets and explicit India, Japan, and Singapore timezone labels are supported by deadline verification. This expands coverage; it is not a claim to index every hackathon on the internet.
 
 ## Conservative event identity
 

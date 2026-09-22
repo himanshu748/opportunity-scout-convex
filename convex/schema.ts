@@ -127,6 +127,7 @@ export default defineSchema({
   })
     .index("by_url", ["url"])
     .index("by_nextCheckAt", ["nextCheckAt"])
+    .index("by_result_nextCheckAt", ["result", "nextCheckAt"])
     .index("by_leaseUntil", ["leaseUntil"]),
   mastra_threads: mastraThreadsTable,
   mastra_messages: mastraMessagesTable,

@@ -77,7 +77,7 @@ export const refresh = internalAction({
   },
 });
 export const checkNext = internalAction({
-  args: { url: v.optional(v.string()) },
+  args: { url: v.optional(v.string()), preferActive: v.optional(v.boolean()) },
   returns: v.string(),
   handler: async (ctx, args): Promise<string> => {
     const source = await ctx.runMutation(internal.discovery.claim, args);
@@ -300,7 +300,11 @@ export const drain = internalAction({
     const results: string[] = [];
     try {
       for (let i = 0; i < 4; i++) {
-        const result = await ctx.runAction(internal.ingest.checkNext, {});
+        // Alternate retention and discovery so a large new-source backlog cannot
+        // starve checks of known events. Keep the same four-request batch cap.
+        const result = await ctx.runAction(internal.ingest.checkNext, {
+          preferActive: i % 2 === 0,
+        });
         results.push(result);
         if (
           result === "Queue is up to date" ||
